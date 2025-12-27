@@ -337,7 +337,7 @@ watch(
         <ScoreBoardCountUp v-else-if="gameStore.gameType === 'count_up'" />
       </div>
 
-      <div class="checkout-guide-container">
+      <div class="checkout-guide-container" v-if="gameStore.gameType === '01'">
         <div
           v-if="checkoutSuggestion"
           class="checkout-guide"
@@ -413,23 +413,17 @@ watch(
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px;
+  padding: 15px 20px;
   background: transparent;
   z-index: 10;
   flex-shrink: 0;
   position: relative;
-}
-
-.content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  padding: 0; /* Remove padding to maximize space */
+  height: 60px;
+  box-sizing: border-box;
 }
 
 .round-info {
-  font-size: 1.2rem;
+  font-size: 1.5rem;
   font-weight: 900;
   color: #333;
   position: absolute;
@@ -443,6 +437,12 @@ button {
   border-radius: 4px;
   border: 1px solid #ccc;
   background: white;
+  cursor: pointer;
+  font-size: 1rem;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .content {
@@ -552,11 +552,17 @@ button {
 }
 
 .checkout-guide-container {
-  height: 32px; /* Fixed height to prevent layout shift */
+  min-height: 32px; /* Use min-height instead of fixed height */
   margin-bottom: 10px;
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.checkout-guide-container:empty {
+  min-height: 0;
+  margin-bottom: 0;
+  height: 0;
 }
 
 .checkout-guide {

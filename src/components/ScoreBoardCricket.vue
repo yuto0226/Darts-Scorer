@@ -73,7 +73,7 @@ const targets = [20, 19, 18, 17, 16, 15, 25]
   font-size: 4rem;
   font-weight: 900;
   text-align: center;
-  margin-bottom: 10px;
+  margin-bottom: 30px;
   color: #42b883;
   line-height: 1;
 }
@@ -127,5 +127,15 @@ const targets = [20, 19, 18, 17, 16, 15, 25]
   text-align: center;
   margin-top: 10px;
   color: #666;
+}
+
+@media (max-height: 600px) {
+  .score {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+  }
+  .scoreboard-cricket {
+    padding: 0 10px;
+  }
 }
 </style>
