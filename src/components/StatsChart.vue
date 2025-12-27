@@ -63,6 +63,11 @@ const chartOptions = {
     intersect: false,
   },
   scales: {
+    x: {
+      ticks: {
+        display: false,
+      },
+    },
     y: {
       type: 'linear' as const,
       display: true,

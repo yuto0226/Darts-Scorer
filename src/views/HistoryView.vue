@@ -7,6 +7,17 @@ import StatsChart from '../components/StatsChart.vue'
 const router = useRouter()
 const historyStore = useHistoryStore()
 
+const filterType = ref<'ALL' | '01' | 'CRICKET' | 'COUNT UP'>('ALL')
+
+const filteredGames = computed(() => {
+  if (filterType.value === 'ALL') return historyStore.games
+  if (filterType.value === '01') return historyStore.games.filter((g) => g.type === '01')
+  if (filterType.value === 'CRICKET') return historyStore.games.filter((g) => g.type === 'cricket')
+  if (filterType.value === 'COUNT UP')
+    return historyStore.games.filter((g) => g.type === 'count_up')
+  return historyStore.games
+})
+
 const recentStats = computed(() => {
   const last10 = historyStore.games.slice(0, 10)
   const ppdGames = last10.filter((g) => g.type === '01' && g.stats?.ppd)
@@ -76,11 +87,22 @@ const deleteGame = (e: Event, id: string) => {
         <StatsChart :games="historyStore.games" />
       </div>
 
+      <div class="filters">
+        <button :class="{ active: filterType === 'ALL' }" @click="filterType = 'ALL'">ALL</button>
+        <button :class="{ active: filterType === '01' }" @click="filterType = '01'">01</button>
+        <button :class="{ active: filterType === 'CRICKET' }" @click="filterType = 'CRICKET'">
+          CRICKET
+        </button>
+        <button :class="{ active: filterType === 'COUNT UP' }" @click="filterType = 'COUNT UP'">
+          COUNT UP
+        </button>
+      </div>
+
       <div class="list">
-        <div v-if="historyStore.games.length === 0" class="empty">No games played yet.</div>
+        <div v-if="filteredGames.length === 0" class="empty">No games found.</div>
         <div
           v-else
-          v-for="game in historyStore.games"
+          v-for="game in filteredGames"
           :key="game.id"
           class="game-item"
           @click="goToDetails(game.id)"
@@ -121,7 +143,7 @@ const deleteGame = (e: Event, id: string) => {
 .content-wrapper {
   flex: 1;
   overflow-y: auto;
-  padding: 20px;
+  padding: 0;
 }
 
 .sticky-header {
@@ -167,13 +189,14 @@ button {
 
 .stats-overview {
   display: flex;
-  gap: 20px;
-  margin-bottom: 20px;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding: 20px 20px 0 20px;
 }
 
 .stat-card {
   background: white;
-  padding: 15px;
+  padding: 10px;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   flex: 1;
@@ -181,24 +204,61 @@ button {
 }
 
 .stat-label {
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   color: #666;
-  margin-bottom: 5px;
+  margin-bottom: 2px;
 }
 
 .stat-value {
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   font-weight: bold;
   color: #2196f3;
 }
 
 .chart-container {
-  height: 250px;
-  margin-bottom: 20px;
+  height: 180px;
+  margin: 0 20px 10px 20px;
   background: white;
   padding: 10px;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.filters {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+  overflow-x: auto;
+  padding-bottom: 10px; /* For scrollbar */
+  padding-top: 10px;
+  position: sticky;
+  top: 0;
+  background: #f8f9fa;
+  z-index: 5;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+.filters button {
+  padding: 8px 16px;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  background: white;
+  color: #666;
+  cursor: pointer;
+  white-space: nowrap;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.filters button.active {
+  background: #2196f3;
+  color: white;
+  border-color: #2196f3;
+}
+
+.list {
+  padding: 0 20px 20px 20px;
 }
 
 .game-item {
