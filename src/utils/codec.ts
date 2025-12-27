@@ -184,11 +184,20 @@ export function decodeGameRecord(compressed: string): GameRecord {
     let scoreAfter: number | Record<number, number> = 0
 
     if (type === '01') {
+      const startScore = currentScore01
+      let isBust = false
       throws.forEach((t) => {
+        if (isBust) return
         let val = t.score * t.multiplier
         if (t.score === 25 || t.score === 50) val = 50
-        currentScore01 -= val
+        const newScore = currentScore01 - val
+        if (newScore < 0) {
+          isBust = true
+        } else {
+          currentScore01 = newScore
+        }
       })
+      if (isBust) currentScore01 = startScore
       scoreAfter = currentScore01
     } else if (type === 'count_up') {
       throws.forEach((t) => {
