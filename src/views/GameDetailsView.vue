@@ -62,10 +62,7 @@ const shareGame = () => {
     <header class="sticky-header">
       <button @click="goBack">Back</button>
       <h1>Game Details</h1>
-      <div class="actions-right">
-        <button class="share-btn-icon" @click="shareGame">🔗</button>
-        <button class="delete-btn" @click="deleteGame">🗑️</button>
-      </div>
+      <div class="header-spacer"></div>
     </header>
 
     <div class="content-scroll">
@@ -99,6 +96,10 @@ const shareGame = () => {
               game.type === '01' ? game.rounds?.length || '-' : game.finalScore
             }}</span>
           </div>
+        </div>
+        <div class="summary-actions">
+          <button class="share-btn" @click="shareGame">Share Result</button>
+          <button class="delete-btn" @click="deleteGame">Delete Game</button>
         </div>
       </div>
 
@@ -191,7 +192,28 @@ button {
   gap: 10px;
 }
 
+.header-spacer {
+  width: 40px; /* Match back button width roughly */
+}
+
+.summary-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  border-top: 1px solid #e0e0e0;
+  padding-top: 15px;
+}
+
+.share-btn {
+  flex: 1;
+  background-color: #2196f3;
+  color: white;
+  border: none;
+  font-weight: bold;
+}
+
 .delete-btn {
+  flex: 1;
   border-color: #ff5252;
   color: #ff5252;
 }
