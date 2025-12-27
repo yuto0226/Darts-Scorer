@@ -38,6 +38,22 @@ const isWin = computed(() => {
   return game.value.winner === 'Win' || game.value.winner === 'Player 1'
 })
 
+const shareGame = () => {
+  if (navigator.share) {
+    navigator
+      .share({
+        title: 'Darts Game Result',
+        text: `Check out this darts game!`,
+        url: window.location.href,
+      })
+      .catch(console.error)
+  } else {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      alert('Link copied to clipboard!')
+    })
+  }
+}
+
 const goHome = () => {
   router.push('/')
 }
@@ -69,6 +85,9 @@ const goHome = () => {
               game.type === '01' ? game.rounds?.length || '-' : game.finalScore
             }}</span>
           </div>
+        </div>
+        <div class="summary-actions">
+          <button class="share-btn" @click="shareGame">Share Result</button>
         </div>
       </div>
 
@@ -196,6 +215,22 @@ button {
 .summary-row {
   display: flex;
   align-items: center;
+}
+
+.summary-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  border-top: 1px solid #e0e0e0;
+  padding-top: 15px;
+}
+
+.share-btn {
+  flex: 1;
+  background-color: #2196f3;
+  color: white;
+  border: none;
+  font-weight: bold;
 }
 
 .top-row {
