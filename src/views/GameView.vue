@@ -248,10 +248,18 @@ watch(
           :class="{ 'is-setup': checkoutSuggestion.isSetup }"
         >
           {{ checkoutSuggestion.isSetup ? 'Setup:' : 'Checkout:' }}
-          <span v-for="(step, i) in checkoutSuggestion.steps" :key="i" class="checkout-step">
-            {{ formatCheckoutStep(step)
-            }}<span v-if="i < checkoutSuggestion.steps.length - 1"> → </span>
-          </span>
+          
+          <template v-if="checkoutSuggestion.finalOptions && checkoutSuggestion.finalOptions.length > 0">
+             <span v-for="(opt, i) in checkoutSuggestion.finalOptions" :key="i" class="checkout-step">
+              {{ formatCheckoutStep(opt) }}<span v-if="i < checkoutSuggestion.finalOptions.length - 1"> / </span>
+            </span>
+          </template>
+          <template v-else>
+            <span v-for="(step, i) in checkoutSuggestion.steps" :key="i" class="checkout-step">
+              {{ formatCheckoutStep(step)
+              }}<span v-if="i < checkoutSuggestion.steps.length - 1"> → </span>
+            </span>
+          </template>
         </div>
       </div>
 
@@ -259,7 +267,7 @@ watch(
         <Dartboard
           @hit="onHit"
           :hits="gameStore.currentTurnThrows"
-          :highlight-targets="checkoutSuggestion?.steps"
+          :highlight-targets="checkoutSuggestion?.finalOptions || checkoutSuggestion?.steps"
         />
       </div>
 

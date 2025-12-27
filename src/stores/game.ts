@@ -116,7 +116,8 @@ export const useGameStore = defineStore('game', () => {
       } else if (newScore < 0) {
         score01.value = roundStartScore01.value
         isBust.value = true
-        internalNextTurn(true)
+        waitingForNextRound.value = true
+        // internalNextTurn(true) // Don't auto-advance
         return
       } else {
         score01.value = newScore
@@ -170,6 +171,7 @@ export const useGameStore = defineStore('game', () => {
     if (isGameOver.value) return
 
     waitingForNextRound.value = false
+    isBust.value = false // Reset bust state
     currentRound.value++
     currentThrow.value = 0
     currentTurnThrows.value = []

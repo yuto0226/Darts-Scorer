@@ -5,6 +5,7 @@ export interface CheckoutTarget {
 
 export interface CheckoutGuide {
   steps: CheckoutTarget[]
+  finalOptions?: CheckoutTarget[] // Alternative options for the final shot
   isSetup: boolean
 }
 
@@ -47,8 +48,18 @@ export function getCheckoutGuide(score: number, dartsRemaining: number): Checkou
   // 1 Dart Finish
   if (dartsRemaining >= 1) {
     // Check ALL throws
-    const oneDart = ALL_THROWS.find((d) => d.score * d.multiplier === score)
-    if (oneDart) return { steps: [oneDart], isSetup: false }
+    const oneDartOptions = ALL_THROWS.filter((d) => d.score * d.multiplier === score)
+    if (oneDartOptions.length > 0) {
+      // Sort options: Double > Single > Triple (Standard preference usually Double, but user wants all)
+      // Let's just return them all in finalOptions
+      // And steps can be empty or just the first one?
+      // If we have finalOptions, the UI should display them instead of steps[0]
+      return { 
+        steps: [oneDartOptions[0]], 
+        finalOptions: oneDartOptions,
+        isSetup: false 
+      }
+    }
   }
 
   // 2 Dart Finish
