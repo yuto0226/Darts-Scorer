@@ -550,11 +550,19 @@ button {
   transform: translate(-50%, -50%);
   font-size: 4rem;
   font-weight: 900;
-  color: #ffeb3b;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+  color: #ffffff;
   pointer-events: none;
   z-index: 20;
   animation: pop-message 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  padding: 0.2em 1.5em;
+  background: rgba(0, 0, 0, 0.8);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 300px;
+  min-height: 70px;
+  text-align: center;
 }
 
 .scoreboard-area {
