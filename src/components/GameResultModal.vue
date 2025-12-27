@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import { ref, watch } from 'vue'
 import type { GameRecord } from '../stores/history'
 import HistoryChart from './HistoryChart.vue'
 import { encodeGameRecord } from '../utils/codec'
 
-defineProps<{
+const props = defineProps<{
   visible: boolean
   winner?: string
   isAborted?: boolean
@@ -13,6 +14,34 @@ defineProps<{
 const emit = defineEmits<{
   (e: 'close', result: 'Win' | 'Loss' | 'Abort' | 'Discard' | 'Cancel'): void
 }>()
+
+// Local state to handle the transition from "Abort Confirmation" to "Result View"
+const showResult = ref(false)
+
+// Reset local state when modal opens/closes or isAborted changes
+watch(
+  () => [props.visible, props.isAborted],
+  () => {
+    if (!props.visible) {
+      showResult.value = false
+    } else if (!props.isAborted) {
+      // If opened normally (Game Over), show result immediately
+      showResult.value = true
+    } else {
+      // If opened via End Game, start in confirmation mode
+      showResult.value = false
+    }
+  },
+  { immediate: true },
+)
+
+const handleLoss = () => {
+  showResult.value = true
+}
+
+const handleClose = (result: 'Win' | 'Loss' | 'Abort' | 'Discard' | 'Cancel') => {
+  emit('close', result)
+}
 
 const shareGame = (record: GameRecord) => {
   const compressed = encodeGameRecord(record)
@@ -37,38 +66,44 @@ const shareGame = (record: GameRecord) => {
 <template>
   <div v-if="visible" class="modal-overlay">
     <div class="modal-content">
-      <h2 v-if="isAborted">End Game</h2>
+      <h2 v-if="!showResult">End Game</h2>
       <h2 v-else>Game Over!</h2>
 
       <div class="modal-body">
-        <h1 v-if="gameRecord?.type === 'count_up'" class="result-text">
-          Score: {{ gameRecord.finalScore }}
-        </h1>
-        <h1 v-else-if="winner && !isAborted" class="result-text">{{ winner }}</h1>
+        <template v-if="showResult">
+          <h1 class="result-text">{{ isAborted ? 'Lose' : winner }}</h1>
 
-        <div v-if="gameRecord?.stats && !isAborted" class="stats-summary">
-          <span v-if="gameRecord.stats.ppd">PPD: {{ gameRecord.stats.ppd }}</span>
-          <span v-if="gameRecord.stats.mpr">MPR: {{ gameRecord.stats.mpr }}</span>
-        </div>
+          <h2 v-if="gameRecord?.type === 'count_up'" class="cricket-score">
+            {{ gameRecord.finalScore }}
+          </h2>
+          <h2 v-else-if="gameRecord?.type === 'cricket'" class="cricket-score">
+            {{ gameRecord.finalScore }}
+          </h2>
 
-        <div v-if="gameRecord && !isAborted" class="chart-preview">
-          <HistoryChart :game="gameRecord" :height="200" />
-        </div>
+          <div v-if="gameRecord?.stats" class="stats-summary">
+            <span v-if="gameRecord.stats.ppd">PPD: {{ gameRecord.stats.ppd }}</span>
+            <span v-if="gameRecord.stats.mpr">MPR: {{ gameRecord.stats.mpr }}</span>
+          </div>
 
-        <p v-if="isAborted" style="margin: 10px 0 5px 0; font-weight: bold">Select result:</p>
+          <div v-if="gameRecord" class="chart-preview">
+            <HistoryChart :game="gameRecord" :height="200" />
+          </div>
+        </template>
+
+        <p v-else style="margin: 10px 0 5px 0; font-weight: bold">Select result:</p>
       </div>
 
       <div class="actions">
-        <template v-if="isAborted">
-          <button class="loss-btn" @click="emit('close', 'Loss')">I Lost (Save)</button>
-          <button class="abort-btn" @click="emit('close', 'Discard')">Discard (No Save)</button>
-          <button class="cancel-btn" @click="emit('close', 'Cancel')">Cancel</button>
+        <template v-if="!showResult">
+          <button class="loss-btn" @click="handleLoss">I Lost (Save)</button>
+          <button class="abort-btn" @click="handleClose('Discard')">Discard (No Save)</button>
+          <button class="cancel-btn" @click="handleClose('Cancel')">Cancel</button>
         </template>
         <template v-else>
           <button class="share-btn" v-if="gameRecord" @click="shareGame(gameRecord)">
             Share Result
           </button>
-          <button class="ok-btn" @click="emit('close', 'Win')">OK</button>
+          <button class="ok-btn" @click="handleClose(isAborted ? 'Loss' : 'Win')">OK</button>
         </template>
       </div>
     </div>
@@ -174,6 +209,12 @@ button {
   font-size: 2.5rem;
   font-weight: 900;
   color: #e91e63;
+  margin: 0 0 5px 0;
+}
+
+.cricket-score {
+  font-size: 3rem;
+  line-height: 1;
   margin: 0 0 5px 0;
 }
 
