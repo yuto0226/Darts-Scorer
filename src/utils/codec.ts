@@ -55,31 +55,108 @@ const getLabel = (score: number, multiplier: number): string => {
   return `${prefix}${score}`
 }
 
+// V3 Custom Encoding Helpers
+const V3_PREFIX = 'v3|'
+const ROUND_SEPARATOR_CHAR = String.fromCharCode(999)
+const THROW_OFFSET = 1000
+
+const encodeThrow = (score: number, multiplier: number): string => {
+  // score 0-25, multiplier 1-3
+  // val = score * 3 + (multiplier - 1)
+  // max = 25 * 3 + 2 = 77
+  const val = score * 3 + (multiplier - 1)
+  return String.fromCharCode(THROW_OFFSET + val)
+}
+
+const decodeThrow = (char: string): { score: number; multiplier: 1 | 2 | 3 } => {
+  const val = char.charCodeAt(0) - THROW_OFFSET
+  const multiplier = ((val % 3) + 1) as 1 | 2 | 3
+  const score = Math.floor(val / 3)
+  return { score, multiplier }
+}
+
+const encodeWinner = (w: string): string => {
+  if (w === 'Win' || w === 'Player 1') return '1'
+  if (w === 'Lose') return '0'
+  if (w === 'Finish') return '2'
+  return '0'
+}
+
+const decodeWinner = (code: string): string => {
+  if (code === '1') return 'Win'
+  if (code === '2') return 'Finish'
+  return 'Lose'
+}
+
 // Main Functions
 export function encodeGameRecord(record: GameRecord): string {
-  const minified: MinifiedGameRecord = {
-    t: getTypeIndex(record.type),
-    ts: record.targetScore,
-    d: record.date,
-    w: record.winner,
-    fs: record.finalScore,
-    r: record.rounds.map((round) => ({
-      t: round.throws.map((t) => [t.score, t.multiplier]),
-    })),
-  }
-  return LZString.compressToEncodedURIComponent(JSON.stringify(minified))
+  // V3 Encoding
+  const typeIdx = getTypeIndex(record.type)
+  const target = record.targetScore ? record.targetScore.toString(36) : ''
+  const date = record.date.toString(36)
+  const winner = encodeWinner(record.winner)
+  const final = record.finalScore.toString(36)
+
+  let body = ''
+  record.rounds.forEach((r, i) => {
+    if (i > 0) body += ROUND_SEPARATOR_CHAR
+    r.throws.forEach((t) => {
+      body += encodeThrow(t.score, t.multiplier)
+    })
+  })
+
+  const raw = `${V3_PREFIX}${typeIdx}|${target}|${date}|${winner}|${final}|${body}`
+  return LZString.compressToEncodedURIComponent(raw)
 }
 
 export function decodeGameRecord(compressed: string): GameRecord {
-  const json = LZString.decompressFromEncodedURIComponent(compressed)
-  if (!json) throw new Error('Decompression failed')
+  const raw = LZString.decompressFromEncodedURIComponent(compressed)
+  if (!raw) throw new Error('Decompression failed')
 
-  const minified: MinifiedGameRecord = JSON.parse(json)
-  const type = getTypeString(minified.t)
+  let type: '01' | 'cricket' | 'count_up'
+  let targetScore: number | undefined
+  let date: number
+  let winner: string
+  let finalScore: any
+  let roundsData: { score: number; multiplier: 1 | 2 | 3 }[][] = []
+
+  if (raw.startsWith(V3_PREFIX)) {
+    // V3 Decoding
+    const parts = raw.split('|')
+    // v3 | type | target | date | winner | final | body
+    // 0    1      2        3      4        5       6
+    const typeIdx = parseInt(parts[1] || '0') as MinifiedGameType
+    type = getTypeString(typeIdx)
+    targetScore = parts[2] ? parseInt(parts[2], 36) : undefined
+    date = parseInt(parts[3] || '0', 36)
+    winner = decodeWinner(parts[4] || '0')
+    finalScore = parseInt(parts[5] || '0', 36)
+
+    const body = parts.slice(6).join('|') // In case body contains | (it shouldn't)
+    const roundStrings = body.split(ROUND_SEPARATOR_CHAR)
+    roundsData = roundStrings.map((rs) => {
+      const throws: { score: number; multiplier: 1 | 2 | 3 }[] = []
+      for (const char of rs) {
+        throws.push(decodeThrow(char))
+      }
+      return throws
+    })
+  } else {
+    // V2 (JSON) Decoding
+    const minified: MinifiedGameRecord = JSON.parse(raw)
+    type = getTypeString(minified.t)
+    targetScore = minified.ts
+    date = minified.d
+    winner = minified.w
+    finalScore = minified.fs
+    roundsData = minified.r.map((mr) =>
+      mr.t.map(([s, m]) => ({ score: s, multiplier: m as 1 | 2 | 3 })),
+    )
+  }
 
   // Reconstruct Rounds and Calculate Stats
   const rounds: RoundRecord[] = []
-  let currentScore01 = minified.ts || 301
+  let currentScore01 = targetScore || 301
   let currentScoreCountUp = 0
   const cricketMarks: Record<number, number> = {
     15: 0,
@@ -94,11 +171,11 @@ export function decodeGameRecord(compressed: string): GameRecord {
   let totalDarts = 0
   let totalMarks = 0 // For MPR
 
-  minified.r.forEach((mr, index) => {
-    const throws: DartScore[] = mr.t.map(([s, m]) => ({
-      score: s,
-      multiplier: m,
-      label: getLabel(s, m),
+  roundsData.forEach((rd, index) => {
+    const throws: DartScore[] = rd.map((t) => ({
+      score: t.score,
+      multiplier: t.multiplier,
+      label: getLabel(t.score, t.multiplier),
     }))
 
     totalDarts += throws.length
@@ -112,10 +189,6 @@ export function decodeGameRecord(compressed: string): GameRecord {
         if (t.score === 25 || t.score === 50) val = 50
         currentScore01 -= val
       })
-      // Simple reconstruction (doesn't handle bust logic perfectly if we don't have history,
-      // but for display purposes, the final result of the round is what matters.
-      // However, we don't store per-throw history in minified, just per-round.
-      // Assuming the stored rounds are valid played rounds.)
       scoreAfter = currentScore01
     } else if (type === 'count_up') {
       throws.forEach((t) => {
@@ -125,11 +198,6 @@ export function decodeGameRecord(compressed: string): GameRecord {
       })
       scoreAfter = currentScoreCountUp
     } else if (type === 'cricket') {
-      // Replaying cricket logic is hard without opponent state.
-      // But for stats (MPR), we just need marks.
-      // For scoreAfter, we might just return the marks count?
-      // The original RoundRecord for cricket has scoreAfter as Record<number, number> (marks)
-      // We can try to accumulate marks.
       throws.forEach((t) => {
         const target = t.score
         if (cricketMarks[target] !== undefined) {
@@ -150,17 +218,15 @@ export function decodeGameRecord(compressed: string): GameRecord {
   // Calculate Stats
   const stats: { ppd?: number; ppr?: number; mpr?: number } = {}
 
-  if (type === '01' && minified.ts) {
+  if (type === '01' && targetScore) {
     // PPD = (Start - End) / Darts
-    // If game finished, End is 0. If not, End is finalScore.
-    // Actually minified.fs should be the final score.
-    const effectivePoints = minified.ts - (minified.fs as number)
+    const effectivePoints = targetScore - (finalScore as number)
     if (totalDarts > 0) {
       stats.ppd = Number((effectivePoints / totalDarts).toFixed(2))
       stats.ppr = Number((stats.ppd * 3).toFixed(2))
     }
   } else if (type === 'count_up') {
-    const totalScore = minified.fs as number
+    const totalScore = finalScore as number
     if (totalDarts > 0) {
       stats.ppd = Number((totalScore / totalDarts).toFixed(2))
       stats.ppr = Number((stats.ppd * 3).toFixed(2))
@@ -173,12 +239,12 @@ export function decodeGameRecord(compressed: string): GameRecord {
   }
 
   return {
-    id: 'shared-' + minified.d, // Generate a temp ID
+    id: 'shared-' + date, // Generate a temp ID
     type,
-    targetScore: minified.ts,
-    date: minified.d,
-    winner: minified.w,
-    finalScore: minified.fs,
+    targetScore,
+    date,
+    winner,
+    finalScore,
     rounds,
     stats,
   }
