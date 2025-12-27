@@ -16,12 +16,13 @@ const store = useGameStore()
 <style scoped>
 .scoreboard-01 {
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 .main-score {
-  font-size: 4rem;
-  font-weight: bold;
+  font-size: 6rem;
+  font-weight: 900;
   color: #42b883;
+  line-height: 1;
 }
 .info {
   display: flex;

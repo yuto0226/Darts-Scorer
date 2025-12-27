@@ -1,6 +1,10 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import { getScoreFromCoordinates, type DartScore } from '../utils/darts'
+
+const props = defineProps<{
+  hits?: DartScore[]
+}>()
 
 const emit = defineEmits<{
   (e: 'hit', score: DartScore): void
@@ -13,15 +17,9 @@ const onClick = (e: MouseEvent) => {
   if (!svgRef.value) return
   const rect = svgRef.value.getBoundingClientRect()
 
-  // ViewBox is -110 -110 220 220
-  const viewBoxSize = 220
-  const offset = 110
-
-  const scale = viewBoxSize / Math.min(rect.width, rect.height)
-
-  // Calculate x, y relative to center of SVG
-  // We need to handle aspect ratio if the element isn't square, but let's assume CSS keeps it square or we use the min dimension
-  // Better approach: map client coords to SVG user units
+  // ViewBox is -120 -120 240 240
+  const viewBoxSize = 240
+  const offset = 120
 
   // Simple mapping if we assume square and fit
   const x = (e.clientX - rect.left) * (viewBoxSize / rect.width) - offset
@@ -37,13 +35,13 @@ const onClick = (e: MouseEvent) => {
 const SLICES = [20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5]
 const R_BULL_INNER = 3.7
 const R_BULL_OUTER = 9.4
-const R_TRIPLE_INNER = 58.2
-const R_TRIPLE_OUTER = 63.0
-const R_DOUBLE_INNER = 95.3
+const R_TRIPLE_INNER = 55.0
+const R_TRIPLE_OUTER = 65.0
+const R_DOUBLE_INNER = 90.0
 const R_DOUBLE_OUTER = 100.0
 
 // Generate paths for numbers
-const textRadius = 108
+const textRadius = 112
 const getTextPos = (i: number) => {
   const angle = (i * 18 - 90) * (Math.PI / 180)
   return {
@@ -52,13 +50,53 @@ const getTextPos = (i: number) => {
     text: SLICES[i],
   }
 }
+
+const hitMarkers = computed(() => {
+  if (!props.hits) return []
+  return props.hits
+    .map((hit, index) => {
+      if (hit.score === 0) return null // Miss
+
+      let r = 0
+      let angle = 0
+
+      if (hit.score === 25) {
+        r = (R_BULL_INNER + R_BULL_OUTER) / 2
+        angle = -Math.PI / 2
+      } else if (hit.score === 50) {
+        r = 0
+        angle = 0
+      } else {
+        const sliceIndex = SLICES.indexOf(hit.score)
+        if (sliceIndex === -1) return null
+
+        angle = (sliceIndex * 18 - 90) * (Math.PI / 180)
+
+        if (hit.multiplier === 1) {
+          // Place in outer single for visibility
+          r = (R_TRIPLE_OUTER + R_DOUBLE_INNER) / 2
+        } else if (hit.multiplier === 2) {
+          r = (R_DOUBLE_INNER + R_DOUBLE_OUTER) / 2
+        } else if (hit.multiplier === 3) {
+          r = (R_TRIPLE_INNER + R_TRIPLE_OUTER) / 2
+        }
+      }
+
+      return {
+        x: Math.cos(angle) * r,
+        y: Math.sin(angle) * r,
+        label: (index + 1).toString(),
+      }
+    })
+    .filter((m): m is { x: number; y: number; label: string } => m !== null)
+})
 </script>
 
 <template>
   <div class="dartboard-container">
-    <svg ref="svgRef" viewBox="-110 -110 220 220" @click="onClick" class="dartboard">
+    <svg ref="svgRef" viewBox="-120 -120 240 240" @click="onClick" class="dartboard">
       <!-- Background -->
-      <circle cx="0" cy="0" r="110" fill="#333" />
+      <circle cx="0" cy="0" r="120" fill="#333" />
 
       <!-- Slices -->
       <g v-for="(num, i) in SLICES" :key="i" :transform="`rotate(${i * 18 - 9} 0 0)`">
@@ -138,20 +176,30 @@ const getTextPos = (i: number) => {
         {{ item.text }}
       </text>
 
-      <!-- Last Hit Marker (Removed as per request for less precision visual, but we can keep a subtle highlight if needed. For now, removing the dot) -->
-      <!-- 
-      <circle
-        v-if="lastHit"
-        :cx="lastHit.x"
-        :cy="lastHit.y"
-        r="2"
-        fill="yellow"
-        stroke="black"
-        stroke-width="0.5"
-        class="hit-marker"
-      />
-      -->
-      />
+      <!-- Hit Markers -->
+      <g v-for="(marker, i) in hitMarkers" :key="`hit-${i}`">
+        <circle
+          :cx="marker.x"
+          :cy="marker.y"
+          r="4"
+          fill="#ffeb3b"
+          stroke="#000"
+          stroke-width="0.5"
+          class="hit-marker-dot"
+        />
+        <text
+          :x="marker.x"
+          :y="marker.y"
+          fill="#000"
+          font-size="5"
+          font-weight="bold"
+          text-anchor="middle"
+          dominant-baseline="middle"
+          pointer-events="none"
+        >
+          {{ marker.label }}
+        </text>
+      </g>
     </svg>
   </div>
 </template>
@@ -175,19 +223,17 @@ const getTextPos = (i: number) => {
   touch-action: none; /* Prevent scrolling when tapping on mobile */
 }
 
-.hit-marker {
+.hit-marker-dot {
   pointer-events: none;
-  animation: pulse 0.5s ease-out;
+  animation: pop-in 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-@keyframes pulse {
+@keyframes pop-in {
   0% {
-    r: 5;
-    opacity: 1;
+    transform: scale(0);
   }
   100% {
-    r: 2;
-    opacity: 1;
+    transform: scale(1);
   }
 }
 </style>

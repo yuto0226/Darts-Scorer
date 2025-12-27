@@ -77,6 +77,15 @@ header {
   margin-bottom: 20px;
 }
 
+button {
+  padding: 8px 16px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  background: white;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
 .game-item {
   background: #f0f0f0;
   padding: 15px;

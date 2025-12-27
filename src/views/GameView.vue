@@ -2,7 +2,7 @@
 import { onMounted, watch, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useGameStore, type GameType } from '../stores/game'
-import { useHistoryStore, type RoundRecord } from '../stores/history'
+import { useHistoryStore, type RoundRecord, type GameRecord } from '../stores/history'
 import Dartboard from '../components/Dartboard.vue'
 import ScoreBoard01 from '../components/ScoreBoard01.vue'
 import ScoreBoardCricket from '../components/ScoreBoardCricket.vue'
@@ -17,6 +17,42 @@ const historyStore = useHistoryStore()
 const showModal = ref(false)
 const modalWinner = ref('')
 const isAborted = ref(false)
+const tempGameRecord = ref<GameRecord | undefined>(undefined)
+const specialMessage = ref('')
+
+watch(
+  () => gameStore.waitingForNextRound,
+  (val) => {
+    if (val) {
+      // Check for special achievements
+      const throws = gameStore.currentTurnThrows
+      if (throws.length === 3) {
+        // Calculate total score for 01
+        if (gameStore.gameType === '01') {
+          const total = throws.reduce((sum, t) => {
+            let val = t.score * t.multiplier
+            if (t.score === 25 || t.score === 50) val = 50
+            return sum + val
+          }, 0)
+
+          if (total >= 151) specialMessage.value = 'HIGH TON'
+          else if (total >= 100) specialMessage.value = 'LOW TON'
+          else if (total >= 60) specialMessage.value = 'NICE ONE' // Simple logic
+        }
+
+        // Hat Trick (3 Bulls)
+        const bulls = throws.filter((t) => t.score === 25 || t.score === 50).length
+        if (bulls === 3) specialMessage.value = 'HAT TRICK'
+
+        if (specialMessage.value) {
+          setTimeout(() => {
+            specialMessage.value = ''
+          }, 2000)
+        }
+      }
+    }
+  },
+)
 
 onMounted(() => {
   const type = route.params.type as GameType
@@ -41,12 +77,10 @@ const onUndo = () => {
   gameStore.undo()
 }
 
-const onFinish = (result?: 'Win' | 'Loss' | 'Abort') => {
-  // Process history to group by round
+const buildGameRecord = (winnerOverride?: string): GameRecord => {
   const rounds: RoundRecord[] = []
   const history = gameStore.throwHistory
 
-  // Simple grouping
   const maxRound = history.length > 0 ? history[history.length - 1]!.round : 0
   for (let r = 1; r <= maxRound; r++) {
     const throws = history
@@ -57,32 +91,42 @@ const onFinish = (result?: 'Win' | 'Loss' | 'Abort') => {
       rounds.push({
         round: r,
         throws: throws,
-        scoreAfter: 0, // We don't track score snapshot yet, but can be inferred if needed. For now just throws.
+        scoreAfter: 0,
       })
     }
   }
 
   let winner = gameStore.winner || 'Aborted'
-  if (result) {
-    if (result === 'Win') winner = 'Player 1'
-    else if (result === 'Loss') winner = 'Opponent'
-    else winner = 'Aborted'
+  if (winnerOverride) {
+    winner = winnerOverride
   }
 
-  // Save and exit
-  historyStore.addGame({
+  return {
     id: Date.now().toString(),
     type: gameStore.gameType,
     date: Date.now(),
     winner: winner,
     finalScore: gameStore.gameType === '01' ? gameStore.score01 : gameStore.cricketState.score,
     rounds: rounds,
-  })
+  }
+}
+
+const onFinish = (result?: 'Win' | 'Loss' | 'Abort') => {
+  let winnerOverride = undefined
+  if (result) {
+    if (result === 'Win') winnerOverride = 'Player 1'
+    else if (result === 'Loss') winnerOverride = 'Opponent'
+    else winnerOverride = 'Aborted'
+  }
+
+  const record = buildGameRecord(winnerOverride)
+  historyStore.addGame(record)
   router.push('/')
 }
 
 const confirmExit = () => {
   isAborted.value = true
+  tempGameRecord.value = buildGameRecord('Aborted')
   showModal.value = true
 }
 
@@ -98,6 +142,7 @@ watch(
     if (val) {
       setTimeout(() => {
         modalWinner.value = gameStore.winner
+        tempGameRecord.value = buildGameRecord()
         isAborted.value = false
         showModal.value = true
       }, 500)
@@ -117,16 +162,11 @@ watch(
       <ScoreBoard01 v-if="gameStore.gameType === '01'" />
       <ScoreBoardCricket v-else />
 
-      <div class="current-throws">
-        <div v-for="i in 3" :key="i" class="throw-slot">
-          <span v-if="gameStore.currentTurnThrows[i - 1]">
-            {{ gameStore.currentTurnThrows[i - 1]?.label }}
-          </span>
-          <span v-else class="placeholder">-</span>
-        </div>
-      </div>
+      <Dartboard @hit="onHit" :hits="gameStore.currentTurnThrows" />
 
-      <Dartboard @hit="onHit" />
+      <div v-if="specialMessage" class="special-message">
+        {{ specialMessage }}
+      </div>
 
       <div class="controls">
         <button
@@ -144,6 +184,7 @@ watch(
       :visible="showModal"
       :winner="modalWinner"
       :is-aborted="isAborted"
+      :game-record="tempGameRecord"
       @close="handleModalClose"
     />
   </div>
@@ -180,6 +221,7 @@ button {
   align-items: center;
   gap: 10px;
   overflow-y: auto;
+  width: 100%;
 }
 
 .current-throws {
@@ -220,9 +262,9 @@ button {
   color: white;
   border: none;
   font-weight: bold;
-  width: 100px;
-  height: 50px;
-  font-size: 1.2rem;
+  width: 120px;
+  height: 60px;
+  font-size: 1.5rem;
 }
 
 .next-btn {
@@ -230,9 +272,9 @@ button {
   color: white;
   border: none;
   font-weight: bold;
-  width: 150px;
-  height: 50px;
-  font-size: 1.2rem;
+  width: 180px;
+  height: 60px;
+  font-size: 1.5rem;
   animation: pulse-btn 1s infinite;
 }
 
@@ -245,6 +287,31 @@ button {
   }
   100% {
     transform: scale(1);
+  }
+}
+
+.special-message {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 4rem;
+  font-weight: 900;
+  color: #ffeb3b;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+  z-index: 20;
+  animation: pop-message 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes pop-message {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
   }
 }
 </style>

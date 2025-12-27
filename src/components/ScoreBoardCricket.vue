@@ -7,7 +7,7 @@ const targets = [20, 19, 18, 17, 16, 15, 25]
 
 <template>
   <div class="scoreboard-cricket">
-    <div class="score">Score: {{ store.cricketState.score }}</div>
+    <div class="score">{{ store.cricketState.score }}</div>
     <div class="grid">
       <div v-for="t in targets" :key="t" class="row">
         <div class="label">{{ t === 25 ? 'Bull' : t }}</div>
@@ -62,12 +62,15 @@ const targets = [20, 19, 18, 17, 16, 15, 25]
 
 <style scoped>
 .scoreboard-cricket {
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 .score {
-  font-size: 2rem;
+  font-size: 4rem;
+  font-weight: 900;
   text-align: center;
   margin-bottom: 10px;
+  color: #42b883;
+  line-height: 1;
 }
 .grid {
   display: flex;

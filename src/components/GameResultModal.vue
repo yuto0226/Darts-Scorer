@@ -1,8 +1,12 @@
 <script setup lang="ts">
+import type { GameRecord } from '../stores/history'
+import HistoryChart from './HistoryChart.vue'
+
 defineProps<{
   visible: boolean
   winner?: string
   isAborted?: boolean
+  gameRecord?: GameRecord
 }>()
 
 const emit = defineEmits<{
@@ -17,6 +21,11 @@ const emit = defineEmits<{
       <h2 v-else>Game Over!</h2>
 
       <p v-if="winner && !isAborted">Winner: {{ winner }}</p>
+
+      <div v-if="gameRecord && !isAborted" class="chart-preview">
+        <HistoryChart :game="gameRecord" />
+      </div>
+
       <p v-if="isAborted">Select result:</p>
 
       <div class="actions">
@@ -52,10 +61,17 @@ const emit = defineEmits<{
   background: white;
   padding: 20px;
   border-radius: 12px;
-  width: 80%;
-  max-width: 300px;
+  width: 90%;
+  max-width: 500px;
   text-align: center;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.chart-preview {
+  margin: 10px 0;
+  height: 200px;
 }
 
 h2 {
