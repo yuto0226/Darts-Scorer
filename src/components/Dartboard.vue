@@ -66,7 +66,7 @@ const hitMarkers = computed(() => {
         // Index 0: 150 deg, Index 1: 180 deg, Index 2: 210 deg
         const missAngles = [150, 180, 210]
         // Use index % 3 just in case
-        angle = (missAngles[index % 3] - 90) * (Math.PI / 180)
+        angle = ((missAngles[index % 3] ?? 180) - 90) * (Math.PI / 180)
         r = 110
       } else if (hit.score === 25) {
         r = (R_BULL_INNER + R_BULL_OUTER) / 2

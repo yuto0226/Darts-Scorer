@@ -186,7 +186,8 @@ export const useGameStore = defineStore('game', () => {
   function undo() {
     if (throwHistory.value.length === 0) return
     // Only allow undo if in the same round
-    if (throwHistory.value[throwHistory.value.length - 1].round !== currentRound.value) return
+    const lastThrow = throwHistory.value[throwHistory.value.length - 1]
+    if (lastThrow && lastThrow.round !== currentRound.value) return
 
     if (isGameOver.value) isGameOver.value = false
     if (waitingForNextRound.value) waitingForNextRound.value = false

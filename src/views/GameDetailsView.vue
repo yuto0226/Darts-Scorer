@@ -67,30 +67,30 @@ const deleteGame = () => {
         </div>
       </div>
 
-    <div class="chart-section">
-      <HistoryChart :game="game" />
-    </div>
+      <div class="chart-section">
+        <HistoryChart :game="game" />
+      </div>
 
-    <div class="rounds-section">
-      <h3>Round History</h3>
-      <div class="rounds-table">
-        <div class="table-header">
-          <span>R</span>
-          <span>Throws</span>
-          <span>Score</span>
-        </div>
-        <div v-for="round in game.rounds" :key="round.round" class="table-row">
-          <span class="round-num">{{ round.round }}</span>
-          <span class="throws">
-            {{ round.throws.map((t) => t.label).join(', ') }}
-          </span>
-          <span class="round-score">
-            <!-- Display score after round or marks -->
-            {{ typeof round.scoreAfter === 'number' ? round.scoreAfter : '-' }}
-          </span>
+      <div class="rounds-section">
+        <h3>Round History</h3>
+        <div class="rounds-table">
+          <div class="table-header">
+            <span>R</span>
+            <span>Throws</span>
+            <span>Score</span>
+          </div>
+          <div v-for="round in game.rounds" :key="round.round" class="table-row">
+            <span class="round-num">{{ round.round }}</span>
+            <span class="throws">
+              {{ round.throws.map((t) => t.label).join(', ') }}
+            </span>
+            <span class="round-score">
+              <!-- Display score after round or marks -->
+              {{ typeof round.scoreAfter === 'number' ? round.scoreAfter : '-' }}
+            </span>
+          </div>
         </div>
       </div>
-    </div>
     </div>
   </div>
   <div v-else class="not-found">

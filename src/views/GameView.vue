@@ -120,8 +120,6 @@ const buildGameRecord = (winnerOverride?: string): GameRecord => {
   if (gameStore.gameType === '01') {
     // Effective PPD: (Start - End) / Darts
     // Note: If game was aborted, score01 is current score.
-    const pointsScored = gameStore.roundStartScore01 - gameStore.score01
-    // Actually, roundStartScore01 is just for the current round.
     // We need the Game Start Score (Target).
     const target = gameStore.targetScore
     const effectivePoints = target - gameStore.score01
