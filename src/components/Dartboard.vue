@@ -225,7 +225,7 @@ const hitMarkers = computed(() => {
              A100 100 0 0 1 ${Math.cos(((i * 18 + 9 - 90) * Math.PI) / 180) * R_DOUBLE_OUTER} ${Math.sin(((i * 18 + 9 - 90) * Math.PI) / 180) * R_DOUBLE_OUTER}
              L${Math.cos(((i * 18 + 9 - 90) * Math.PI) / 180) * R_DOUBLE_INNER} ${Math.sin(((i * 18 + 9 - 90) * Math.PI) / 180) * R_DOUBLE_INNER} 
              A${R_DOUBLE_INNER} ${R_DOUBLE_INNER} 0 0 0 ${Math.cos(((i * 18 - 9 - 90) * Math.PI) / 180) * R_DOUBLE_INNER} ${Math.sin(((i * 18 - 9 - 90) * Math.PI) / 180) * R_DOUBLE_INNER}`"
-        :fill="i % 2 === 0 ? '#c62828' : '#1565c0'"
+        :fill="i % 2 === 0 ? '#e91e63' : '#2196f3'"
         stroke="#aaa"
         stroke-width="0.5"
       />
@@ -239,15 +239,15 @@ const hitMarkers = computed(() => {
              A${R_TRIPLE_OUTER} ${R_TRIPLE_OUTER} 0 0 1 ${Math.cos(((i * 18 + 9 - 90) * Math.PI) / 180) * R_TRIPLE_OUTER} ${Math.sin(((i * 18 + 9 - 90) * Math.PI) / 180) * R_TRIPLE_OUTER}
              L${Math.cos(((i * 18 + 9 - 90) * Math.PI) / 180) * R_TRIPLE_INNER} ${Math.sin(((i * 18 + 9 - 90) * Math.PI) / 180) * R_TRIPLE_INNER} 
              A${R_TRIPLE_INNER} ${R_TRIPLE_INNER} 0 0 0 ${Math.cos(((i * 18 - 9 - 90) * Math.PI) / 180) * R_TRIPLE_INNER} ${Math.sin(((i * 18 - 9 - 90) * Math.PI) / 180) * R_TRIPLE_INNER}`"
-        :fill="i % 2 === 0 ? '#c62828' : '#1565c0'"
+        :fill="i % 2 === 0 ? '#e91e63' : '#2196f3'"
         stroke="#aaa"
         stroke-width="0.5"
       />
 
       <!-- Outer Bull -->
-      <circle cx="0" cy="0" :r="R_BULL_OUTER" fill="#1565c0" stroke="#aaa" stroke-width="0.5" />
+      <circle cx="0" cy="0" :r="R_BULL_OUTER" fill="#2196f3" stroke="#aaa" stroke-width="0.5" />
       <!-- Inner Bull -->
-      <circle cx="0" cy="0" :r="R_BULL_INNER" fill="#c62828" stroke="#aaa" stroke-width="0.5" />
+      <circle cx="0" cy="0" :r="R_BULL_INNER" fill="#e91e63" stroke="#aaa" stroke-width="0.5" />
 
       <!-- Highlights -->
       <g v-for="path in highlightPaths" :key="path.key">
@@ -284,7 +284,7 @@ const hitMarkers = computed(() => {
           :r="marker.isMiss ? 6 : 4"
           :fill="marker.isMiss ? '#ff5252' : '#ffeb3b'"
           stroke="#000"
-          stroke-width="0.5"
+          stroke-width="0"
           class="hit-marker-dot"
         />
         <text
