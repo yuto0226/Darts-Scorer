@@ -40,7 +40,10 @@ const shareGame = (record: GameRecord) => {
       <h2 v-if="isAborted">End Game</h2>
       <h2 v-else>Game Over!</h2>
 
-      <h1 v-if="winner && !isAborted" class="result-text">{{ winner }}</h1>
+      <h1 v-if="gameRecord?.type === 'count_up'" class="result-text">
+        Score: {{ gameRecord.finalScore }}
+      </h1>
+      <h1 v-else-if="winner && !isAborted" class="result-text">{{ winner }}</h1>
 
       <div v-if="gameRecord?.stats && !isAborted" class="stats-summary">
         <span v-if="gameRecord.stats.ppd">PPD: {{ gameRecord.stats.ppd }}</span>

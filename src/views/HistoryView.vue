@@ -31,6 +31,7 @@ const getGameLabel = (game: GameRecord) => {
 }
 
 const getResultLabel = (game: GameRecord) => {
+  if (game.type === 'count_up') return 'Finish'
   if (game.winner === 'Win' || game.winner === 'Player 1') return 'Win'
   return 'Lose'
 }
@@ -94,7 +95,10 @@ const deleteGame = (e: Event, id: string) => {
               {{ getResultLabel(game) }}
               <span v-if="game.type === '01'"> | Rounds: {{ game.rounds?.length || '-' }}</span>
               <span v-else> | Score: {{ game.finalScore }}</span>
-              <span v-if="game.stats?.ppd"> | PPD: {{ game.stats.ppd }}</span>
+              <span v-if="game.type === 'count_up' && game.stats?.ppr">
+                | Avg: {{ game.stats.ppr }}
+              </span>
+              <span v-else-if="game.stats?.ppd"> | PPD: {{ game.stats.ppd }}</span>
               <span v-if="game.stats?.mpr"> | MPR: {{ game.stats.mpr }}</span>
             </div>
           </div>

@@ -71,12 +71,21 @@ const shareGame = () => {
     <div class="content-scroll">
       <div class="summary">
         <div class="summary-row top-row">
-          <span class="result-badge" :class="{ win: isWin }">{{ isWin ? 'WIN' : 'LOSE' }}</span>
+          <span
+            class="result-badge"
+            :class="{ win: isWin, finish: game.type === 'count_up' }"
+          >
+            {{ game.type === 'count_up' ? 'FINISH' : isWin ? 'WIN' : 'LOSE' }}
+          </span>
           <span class="type-badge">{{ gameTypeLabel }}</span>
           <span class="date">{{ new Date(game.date).toLocaleString() }}</span>
         </div>
         <div class="summary-row bottom-row">
-          <div class="stat-item" v-if="game.stats?.ppd">
+          <div class="stat-item" v-if="game.type === 'count_up' && game.stats?.ppr">
+            <span class="label">Avg</span>
+            <span class="value">{{ game.stats.ppr }}</span>
+          </div>
+          <div class="stat-item" v-else-if="game.stats?.ppd">
             <span class="label">PPD</span>
             <span class="value">{{ game.stats.ppd }}</span>
           </div>
@@ -229,6 +238,11 @@ button {
 
 .result-badge.win {
   background: #4caf50;
+  color: white;
+}
+
+.result-badge.finish {
+  background: #9c27b0;
   color: white;
 }
 

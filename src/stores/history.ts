@@ -10,7 +10,7 @@ export interface RoundRecord {
 
 export interface GameRecord {
   id: string
-  type: '01' | 'cricket'
+  type: '01' | 'cricket' | 'count_up'
   targetScore?: number // For 01 games (e.g. 301, 501)
   date: number
   winner: string

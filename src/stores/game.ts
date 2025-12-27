@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { DartScore } from '../utils/darts'
 
-export type GameType = '01' | 'cricket'
+export type GameType = '01' | 'cricket' | 'count_up'
 
 interface ThrowRecord {
   score: DartScore
@@ -27,6 +27,9 @@ export const useGameStore = defineStore('game', () => {
   // 01 State
   const score01 = ref(301)
   const roundStartScore01 = ref(301)
+
+  // Count Up State
+  const scoreCountUp = ref(0)
 
   // Cricket State
   const cricketState = ref<{
@@ -63,6 +66,9 @@ export const useGameStore = defineStore('game', () => {
     // Reset 01
     score01.value = target
     roundStartScore01.value = target
+
+    // Reset Count Up
+    scoreCountUp.value = 0
 
     // Reset Cricket
     cricketState.value = {
@@ -122,6 +128,12 @@ export const useGameStore = defineStore('game', () => {
       } else {
         score01.value = newScore
       }
+    } else if (gameType.value === 'count_up') {
+      let val = dart.score * dart.multiplier
+      if (dart.score === 25 || dart.score === 50) {
+        val = 50
+      }
+      scoreCountUp.value += val
     } else {
       const num = dart.score
       let target = num
@@ -152,8 +164,14 @@ export const useGameStore = defineStore('game', () => {
 
     currentThrow.value++
     if (currentThrow.value >= 3) {
-      // Wait for user to click next round
-      waitingForNextRound.value = true
+      if (gameType.value === 'count_up' && currentRound.value >= 8) {
+        isGameOver.value = true
+        winner.value = 'Player 1'
+        waitingForNextRound.value = false
+      } else {
+        // Wait for user to click next round
+        waitingForNextRound.value = true
+      }
     }
   }
 
@@ -242,6 +260,7 @@ export const useGameStore = defineStore('game', () => {
     currentPlayerIndex,
     currentTurnThrows,
     score01,
+    scoreCountUp,
     cricketState,
     isGameOver,
     winner,

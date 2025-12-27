@@ -6,6 +6,7 @@ import { useHistoryStore, type RoundRecord, type GameRecord } from '../stores/hi
 import Dartboard from '../components/Dartboard.vue'
 import ScoreBoard01 from '../components/ScoreBoard01.vue'
 import ScoreBoardCricket from '../components/ScoreBoardCricket.vue'
+import ScoreBoardCountUp from '../components/ScoreBoardCountUp.vue'
 import GameResultModal from '../components/GameResultModal.vue'
 import type { DartScore } from '../utils/darts'
 import { getCheckoutGuide, type CheckoutTarget, type CheckoutGuide } from '../utils/checkout'
@@ -89,7 +90,7 @@ watch(
 
 onMounted(() => {
   const type = route.params.type as GameType
-  if (type !== '01' && type !== 'cricket') {
+  if (type !== '01' && type !== 'cricket' && type !== 'count_up') {
     router.replace('/')
     return
   }
@@ -165,6 +166,12 @@ const buildGameRecord = (winnerOverride?: string): GameRecord => {
     if (roundsPlayed > 0) {
       stats.mpr = Number((totalMarks / roundsPlayed).toFixed(2))
     }
+  } else if (gameStore.gameType === 'count_up') {
+    const totalScore = gameStore.scoreCountUp
+    if (totalDarts > 0) {
+      stats.ppd = Number((totalScore / totalDarts).toFixed(2))
+      stats.ppr = Number((stats.ppd * 3).toFixed(2))
+    }
   }
 
   return {
@@ -173,7 +180,12 @@ const buildGameRecord = (winnerOverride?: string): GameRecord => {
     targetScore: gameStore.gameType === '01' ? gameStore.targetScore : undefined,
     date: Date.now(),
     winner: winner,
-    finalScore: gameStore.gameType === '01' ? gameStore.score01 : gameStore.cricketState.score,
+    finalScore:
+      gameStore.gameType === '01'
+        ? gameStore.score01
+        : gameStore.gameType === 'count_up'
+          ? gameStore.scoreCountUp
+          : gameStore.cricketState.score,
     rounds: rounds,
     stats: stats,
   }
@@ -192,7 +204,16 @@ const onFinish = (result?: 'Win' | 'Loss' | 'Abort' | 'Discard') => {
     else winnerOverride = 'Lose'
   } else {
     // Natural finish
-    winnerOverride = gameStore.winner === 'Player 1' ? 'Win' : 'Lose'
+    if (gameStore.gameType === 'count_up') {
+      winnerOverride = 'Finish'
+    } else {
+      winnerOverride = gameStore.winner === 'Player 1' ? 'Win' : 'Lose'
+    }
+  }
+
+  // Fix for Count Up always being 'Finish' even if 'Win' is passed from modal
+  if (gameStore.gameType === 'count_up' && result === 'Win') {
+    winnerOverride = 'Finish'
   }
 
   const record = buildGameRecord(winnerOverride)
@@ -217,7 +238,11 @@ watch(
   (val) => {
     if (val) {
       setTimeout(() => {
-        modalWinner.value = gameStore.winner === 'Player 1' ? 'Win' : 'Lose'
+        if (gameStore.gameType === 'count_up') {
+          modalWinner.value = 'Finish'
+        } else {
+          modalWinner.value = gameStore.winner === 'Player 1' ? 'Win' : 'Lose'
+        }
         tempGameRecord.value = buildGameRecord(modalWinner.value)
         isAborted.value = false
         showModal.value = true
@@ -238,7 +263,8 @@ watch(
     <div class="content">
       <div class="scoreboard-area">
         <ScoreBoard01 v-if="gameStore.gameType === '01'" />
-        <ScoreBoardCricket v-else />
+        <ScoreBoardCricket v-else-if="gameStore.gameType === 'cricket'" />
+        <ScoreBoardCountUp v-else-if="gameStore.gameType === 'count_up'" />
       </div>
 
       <div class="checkout-guide-container">
@@ -282,7 +308,7 @@ watch(
         {{ specialMessage }}
       </div>
 
-      <div class="controls">
+      <div class="controls" v-if="!gameStore.isGameOver">
         <button
           v-if="gameStore.waitingForNextRound"
           class="next-btn"

@@ -11,6 +11,10 @@ const startCricket = () => {
   router.push({ name: 'game', params: { type: 'cricket' } })
 }
 
+const startCountUp = () => {
+  router.push({ name: 'game', params: { type: 'count_up' } })
+}
+
 const viewHistory = () => {
   router.push({ name: 'history' })
 }
@@ -26,6 +30,7 @@ const viewHistory = () => {
         <button @click="start01(701)">701</button>
       </div>
       <button @click="startCricket">Play Cricket</button>
+      <button @click="startCountUp">Count Up</button>
       <button @click="viewHistory" class="secondary">History</button>
     </div>
   </div>
