@@ -21,6 +21,18 @@ const tempGameRecord = ref<GameRecord | undefined>(undefined)
 const specialMessage = ref('')
 
 watch(
+  () => gameStore.isBust,
+  (val) => {
+    if (val) {
+      specialMessage.value = 'BUST'
+      setTimeout(() => {
+        specialMessage.value = ''
+      }, 2000)
+    }
+  },
+)
+
+watch(
   () => gameStore.waitingForNextRound,
   (val) => {
     if (val) {
@@ -101,22 +113,67 @@ const buildGameRecord = (winnerOverride?: string): GameRecord => {
     winner = winnerOverride
   }
 
+  // Calculate Stats
+  const stats: { ppd?: number; ppr?: number; mpr?: number } = {}
+  const totalDarts = history.length
+
+  if (gameStore.gameType === '01') {
+    // Effective PPD: (Start - End) / Darts
+    // Note: If game was aborted, score01 is current score.
+    const pointsScored = gameStore.roundStartScore01 - gameStore.score01
+    // Actually, roundStartScore01 is just for the current round.
+    // We need the Game Start Score (Target).
+    const target = gameStore.targetScore
+    const effectivePoints = target - gameStore.score01
+
+    if (totalDarts > 0) {
+      stats.ppd = Number((effectivePoints / totalDarts).toFixed(2))
+      stats.ppr = Number((stats.ppd * 3).toFixed(2))
+    }
+  } else if (gameStore.gameType === 'cricket') {
+    // MPR: Total Marks / (Darts / 3)
+    // Count all marks on valid targets
+    let totalMarks = 0
+    history.forEach((t) => {
+      const s = t.score.score
+      if ([15, 16, 17, 18, 19, 20, 25].includes(s)) {
+        totalMarks += t.score.multiplier
+      }
+    })
+
+    // Rounds = Darts / 3
+    const roundsPlayed = totalDarts / 3
+    if (roundsPlayed > 0) {
+      stats.mpr = Number((totalMarks / roundsPlayed).toFixed(2))
+    }
+  }
+
   return {
     id: Date.now().toString(),
     type: gameStore.gameType,
+    targetScore: gameStore.gameType === '01' ? gameStore.targetScore : undefined,
     date: Date.now(),
     winner: winner,
     finalScore: gameStore.gameType === '01' ? gameStore.score01 : gameStore.cricketState.score,
     rounds: rounds,
+    stats: stats,
   }
 }
 
-const onFinish = (result?: 'Win' | 'Loss' | 'Abort') => {
+const onFinish = (result?: 'Win' | 'Loss' | 'Abort' | 'Discard') => {
+  if (result === 'Discard') {
+    router.push('/')
+    return
+  }
+
   let winnerOverride = undefined
   if (result) {
-    if (result === 'Win') winnerOverride = 'Player 1'
-    else if (result === 'Loss') winnerOverride = 'Opponent'
-    else winnerOverride = 'Aborted'
+    if (result === 'Win') winnerOverride = 'Win'
+    else if (result === 'Loss') winnerOverride = 'Lose'
+    else winnerOverride = 'Lose'
+  } else {
+    // Natural finish
+    winnerOverride = gameStore.winner === 'Player 1' ? 'Win' : 'Lose'
   }
 
   const record = buildGameRecord(winnerOverride)
@@ -126,11 +183,11 @@ const onFinish = (result?: 'Win' | 'Loss' | 'Abort') => {
 
 const confirmExit = () => {
   isAborted.value = true
-  tempGameRecord.value = buildGameRecord('Aborted')
+  tempGameRecord.value = buildGameRecord('Lose')
   showModal.value = true
 }
 
-const handleModalClose = (result: 'Win' | 'Loss' | 'Abort' | 'Cancel') => {
+const handleModalClose = (result: 'Win' | 'Loss' | 'Abort' | 'Discard' | 'Cancel') => {
   showModal.value = false
   if (result === 'Cancel') return
   onFinish(result)
@@ -141,8 +198,8 @@ watch(
   (val) => {
     if (val) {
       setTimeout(() => {
-        modalWinner.value = gameStore.winner
-        tempGameRecord.value = buildGameRecord()
+        modalWinner.value = gameStore.winner === 'Player 1' ? 'Win' : 'Lose'
+        tempGameRecord.value = buildGameRecord(modalWinner.value)
         isAborted.value = false
         showModal.value = true
       }, 500)
@@ -155,6 +212,7 @@ watch(
   <div class="game-view">
     <header>
       <button @click="confirmExit" class="back-btn">End Game</button>
+      <div class="round-info">R{{ gameStore.currentRound }}</div>
       <button @click="onUndo" :disabled="gameStore.throwHistory.length === 0">Undo</button>
     </header>
 
@@ -202,8 +260,15 @@ watch(
 header {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   margin-bottom: 5px;
   flex-shrink: 0;
+}
+
+.round-info {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #333;
 }
 
 button {
@@ -217,11 +282,12 @@ button {
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
-  gap: 10px;
+  gap: 20px;
   overflow-y: auto;
   width: 100%;
+  padding-top: 20px;
 }
 
 .current-throws {
@@ -262,7 +328,7 @@ button {
   color: white;
   border: none;
   font-weight: bold;
-  width: 120px;
+  width: 150px;
   height: 60px;
   font-size: 1.5rem;
 }
@@ -272,7 +338,7 @@ button {
   color: white;
   border: none;
   font-weight: bold;
-  width: 180px;
+  width: 220px;
   height: 60px;
   font-size: 1.5rem;
   animation: pulse-btn 1s infinite;

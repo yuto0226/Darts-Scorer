@@ -7,16 +7,13 @@ const store = useGameStore()
 <template>
   <div class="scoreboard-01">
     <div class="main-score">{{ store.score01 }}</div>
-    <div class="info">
-      <div>Round: {{ store.currentRound }}</div>
-    </div>
   </div>
 </template>
 
 <style scoped>
 .scoreboard-01 {
   text-align: center;
-  margin-bottom: 10px;
+  margin-bottom: 40px;
 }
 .main-score {
   font-size: 6rem;

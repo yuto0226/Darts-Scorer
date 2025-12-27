@@ -10,7 +10,7 @@ defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'close', result: 'Win' | 'Loss' | 'Abort' | 'Cancel'): void
+  (e: 'close', result: 'Win' | 'Loss' | 'Abort' | 'Discard' | 'Cancel'): void
 }>()
 </script>
 
@@ -20,19 +20,23 @@ const emit = defineEmits<{
       <h2 v-if="isAborted">End Game</h2>
       <h2 v-else>Game Over!</h2>
 
-      <p v-if="winner && !isAborted">Winner: {{ winner }}</p>
+      <h1 v-if="winner && !isAborted" class="result-text">{{ winner }}</h1>
+
+      <div v-if="gameRecord?.stats && !isAborted" class="stats-summary">
+        <span v-if="gameRecord.stats.ppd">PPD: {{ gameRecord.stats.ppd }}</span>
+        <span v-if="gameRecord.stats.mpr">MPR: {{ gameRecord.stats.mpr }}</span>
+      </div>
 
       <div v-if="gameRecord && !isAborted" class="chart-preview">
-        <HistoryChart :game="gameRecord" />
+        <HistoryChart :game="gameRecord" :height="300" />
       </div>
 
       <p v-if="isAborted">Select result:</p>
 
       <div class="actions">
         <template v-if="isAborted">
-          <button class="win-btn" @click="emit('close', 'Win')">I Won</button>
-          <button class="loss-btn" @click="emit('close', 'Loss')">I Lost</button>
-          <button class="abort-btn" @click="emit('close', 'Abort')">Just Quit</button>
+          <button class="loss-btn" @click="emit('close', 'Loss')">I Lost (Save)</button>
+          <button class="abort-btn" @click="emit('close', 'Discard')">Discard (No Save)</button>
           <button class="cancel-btn" @click="emit('close', 'Cancel')">Cancel</button>
         </template>
         <template v-else>
@@ -66,17 +70,20 @@ const emit = defineEmits<{
   text-align: center;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   max-height: 90vh;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .chart-preview {
   margin: 10px 0;
-  height: 200px;
+  height: auto;
+  flex-shrink: 0;
 }
 
 h2 {
   margin-top: 0;
   color: #333;
+  flex-shrink: 0;
 }
 
 .actions {
@@ -84,6 +91,8 @@ h2 {
   flex-direction: column;
   gap: 10px;
   margin-top: 20px;
+  overflow-y: auto;
+  padding-bottom: 10px;
 }
 
 button {
@@ -116,5 +125,22 @@ button {
   background: #2196f3;
   color: white;
   width: 100%;
+}
+
+.result-text {
+  font-size: 3rem;
+  font-weight: 900;
+  color: #e91e63;
+  margin: 10px 0;
+}
+
+.stats-summary {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  margin: 10px 0;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #333;
 }
 </style>

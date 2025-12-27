@@ -33,8 +33,8 @@ const onClick = (e: MouseEvent) => {
 
 // Constants for drawing
 const SLICES = [20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5]
-const R_BULL_INNER = 3.7
-const R_BULL_OUTER = 9.4
+const R_BULL_INNER = 6.0
+const R_BULL_OUTER = 15.0
 const R_TRIPLE_INNER = 55.0
 const R_TRIPLE_OUTER = 65.0
 const R_DOUBLE_INNER = 90.0
@@ -55,12 +55,20 @@ const hitMarkers = computed(() => {
   if (!props.hits) return []
   return props.hits
     .map((hit, index) => {
-      if (hit.score === 0) return null // Miss
-
       let r = 0
       let angle = 0
 
-      if (hit.score === 25) {
+      if (hit.score === 0) {
+        // Miss: Place in the outer ring (radius 100-120)
+        // Distribute them at the bottom: 135, 180, 225 degrees?
+        // Or just random/fixed spots.
+        // Let's put them at the bottom area.
+        // Index 0: 150 deg, Index 1: 180 deg, Index 2: 210 deg
+        const missAngles = [150, 180, 210]
+        // Use index % 3 just in case
+        angle = (missAngles[index % 3] - 90) * (Math.PI / 180)
+        r = 110
+      } else if (hit.score === 25) {
         r = (R_BULL_INNER + R_BULL_OUTER) / 2
         angle = -Math.PI / 2
       } else if (hit.score === 50) {
@@ -73,8 +81,13 @@ const hitMarkers = computed(() => {
         angle = (sliceIndex * 18 - 90) * (Math.PI / 180)
 
         if (hit.multiplier === 1) {
-          // Place in outer single for visibility
-          r = (R_TRIPLE_OUTER + R_DOUBLE_INNER) / 2
+          if (hit.isInner) {
+            // Place in inner single
+            r = (R_BULL_OUTER + R_TRIPLE_INNER) / 2
+          } else {
+            // Place in outer single
+            r = (R_TRIPLE_OUTER + R_DOUBLE_INNER) / 2
+          }
         } else if (hit.multiplier === 2) {
           r = (R_DOUBLE_INNER + R_DOUBLE_OUTER) / 2
         } else if (hit.multiplier === 3) {
@@ -85,10 +98,11 @@ const hitMarkers = computed(() => {
       return {
         x: Math.cos(angle) * r,
         y: Math.sin(angle) * r,
-        label: (index + 1).toString(),
+        label: hit.score === 0 ? 'M' : (index + 1).toString(),
+        isMiss: hit.score === 0,
       }
     })
-    .filter((m): m is { x: number; y: number; label: string } => m !== null)
+    .filter((m): m is { x: number; y: number; label: string; isMiss: boolean } => m !== null)
 })
 </script>
 
@@ -181,8 +195,8 @@ const hitMarkers = computed(() => {
         <circle
           :cx="marker.x"
           :cy="marker.y"
-          r="4"
-          fill="#ffeb3b"
+          :r="marker.isMiss ? 6 : 4"
+          :fill="marker.isMiss ? '#ff5252' : '#ffeb3b'"
           stroke="#000"
           stroke-width="0.5"
           class="hit-marker-dot"
@@ -190,7 +204,7 @@ const hitMarkers = computed(() => {
         <text
           :x="marker.x"
           :y="marker.y"
-          fill="#000"
+          :fill="marker.isMiss ? '#fff' : '#000'"
           font-size="5"
           font-weight="bold"
           text-anchor="middle"

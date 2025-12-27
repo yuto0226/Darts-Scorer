@@ -44,6 +44,7 @@ export const useGameStore = defineStore('game', () => {
   const isGameOver = ref(false)
   const winner = ref('')
   const waitingForNextRound = ref(false)
+  const isBust = ref(false)
 
   function initGame(type: GameType, target = 301) {
     gameType.value = type
@@ -57,6 +58,7 @@ export const useGameStore = defineStore('game', () => {
     isGameOver.value = false
     winner.value = ''
     waitingForNextRound.value = false
+    isBust.value = false
 
     // Reset 01
     score01.value = target
@@ -81,6 +83,8 @@ export const useGameStore = defineStore('game', () => {
 
   function recordThrow(dart: DartScore) {
     if (isGameOver.value || waitingForNextRound.value || currentThrow.value >= 3) return
+
+    isBust.value = false
 
     // Save for undo
     throwHistory.value.push({
@@ -111,6 +115,7 @@ export const useGameStore = defineStore('game', () => {
         winner.value = 'Player 1'
       } else if (newScore < 0) {
         score01.value = roundStartScore01.value
+        isBust.value = true
         internalNextTurn(true)
         return
       } else {
@@ -180,8 +185,12 @@ export const useGameStore = defineStore('game', () => {
 
   function undo() {
     if (throwHistory.value.length === 0) return
+    // Only allow undo if in the same round
+    if (throwHistory.value[throwHistory.value.length - 1].round !== currentRound.value) return
+
     if (isGameOver.value) isGameOver.value = false
     if (waitingForNextRound.value) waitingForNextRound.value = false
+    if (isBust.value) isBust.value = false
 
     // Remove last
     throwHistory.value.pop()
@@ -228,6 +237,7 @@ export const useGameStore = defineStore('game', () => {
     isGameOver,
     winner,
     waitingForNextRound,
+    isBust,
     throwHistory,
     initGame,
     recordThrow,

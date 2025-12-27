@@ -1,62 +1,98 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { useHistoryStore } from '../stores/history'
-import HistoryChart from '../components/HistoryChart.vue'
+import { useHistoryStore, type GameRecord } from '../stores/history'
+import StatsChart from '../components/StatsChart.vue'
 
 const router = useRouter()
 const historyStore = useHistoryStore()
-const expandedGameId = ref<string | null>(null)
+
+const recentStats = computed(() => {
+  const last10 = historyStore.games.slice(0, 10)
+  const ppdGames = last10.filter((g) => g.type === '01' && g.stats?.ppd)
+  const mprGames = last10.filter((g) => g.type === 'cricket' && g.stats?.mpr)
+
+  const avgPPD = ppdGames.length
+    ? (ppdGames.reduce((sum, g) => sum + (g.stats?.ppd || 0), 0) / ppdGames.length).toFixed(2)
+    : '-'
+
+  const avgMPR = mprGames.length
+    ? (mprGames.reduce((sum, g) => sum + (g.stats?.mpr || 0), 0) / mprGames.length).toFixed(2)
+    : '-'
+
+  return { avgPPD, avgMPR }
+})
+
+const getGameLabel = (game: GameRecord) => {
+  if (game.type === '01' && game.targetScore) {
+    return game.targetScore.toString()
+  }
+  return game.type.toUpperCase()
+}
+
+const getResultLabel = (game: GameRecord) => {
+  if (game.winner === 'Win' || game.winner === 'Player 1') return 'Win'
+  return 'Lose'
+}
 
 const goBack = () => {
   router.push('/')
 }
 
-const toggleExpand = (id: string) => {
-  if (expandedGameId.value === id) {
-    expandedGameId.value = null
-  } else {
-    expandedGameId.value = id
+const goToDetails = (id: string) => {
+  router.push(`/history/${id}`)
+}
+
+const deleteGame = (e: Event, id: string) => {
+  e.stopPropagation()
+  if (confirm('Are you sure you want to delete this game?')) {
+    historyStore.deleteGame(id)
   }
 }
 </script>
 
 <template>
   <div class="history">
-    <header>
+    <header class="sticky-header">
       <button @click="goBack">Back</button>
       <h1>History</h1>
     </header>
-    <div class="list">
-      <div v-if="historyStore.games.length === 0" class="empty">No games played yet.</div>
-      <div
-        v-else
-        v-for="game in historyStore.games"
-        :key="game.id"
-        class="game-item"
-        @click="toggleExpand(game.id)"
-      >
-        <div class="game-summary">
-          <div class="game-info">
-            <span class="type">{{ game.type.toUpperCase() }}</span>
-            <span class="date">{{ new Date(game.date).toLocaleString() }}</span>
-          </div>
-          <div class="result">Winner: {{ game.winner }} | Score: {{ game.finalScore }}</div>
-        </div>
 
-        <div v-if="expandedGameId === game.id" class="game-details">
-          <HistoryChart :game="game" />
-          <h4>Round History</h4>
-          <div class="rounds-table">
-            <div class="table-header">
-              <span>R</span>
-              <span>Throws</span>
+    <div class="content-wrapper">
+      <div class="stats-overview">
+        <div class="stat-card">
+          <div class="stat-label">Avg PPD (Last 10)</div>
+          <div class="stat-value">{{ recentStats.avgPPD }}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Avg MPR (Last 10)</div>
+          <div class="stat-value">{{ recentStats.avgMPR }}</div>
+        </div>
+      </div>
+
+      <div class="chart-container" v-if="historyStore.games.length > 0">
+        <StatsChart :games="historyStore.games" />
+      </div>
+
+      <div class="list">
+        <div v-if="historyStore.games.length === 0" class="empty">No games played yet.</div>
+        <div
+          v-else
+          v-for="game in historyStore.games"
+          :key="game.id"
+          class="game-item"
+          @click="goToDetails(game.id)"
+        >
+          <div class="game-summary">
+            <div class="game-info">
+              <span class="type">{{ getGameLabel(game) }}</span>
+              <span class="date">{{ new Date(game.date).toLocaleString() }}</span>
+              <button class="delete-btn" @click="deleteGame($event, game.id)">🗑️</button>
             </div>
-            <div v-for="round in game.rounds" :key="round.round" class="table-row">
-              <span class="round-num">{{ round.round }}</span>
-              <span class="throws">
-                {{ round.throws.map((t) => t.label).join(', ') }}
-              </span>
+            <div class="result">
+              {{ getResultLabel(game) }} | Score: {{ game.finalScore }}
+              <span v-if="game.stats?.ppd"> | PPD: {{ game.stats.ppd }}</span>
+              <span v-if="game.stats?.mpr"> | MPR: {{ game.stats.mpr }}</span>
             </div>
           </div>
         </div>
@@ -67,14 +103,60 @@ const toggleExpand = (id: string) => {
 
 <style scoped>
 .history {
-  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
 }
 
-header {
+.sticky-header {
   display: flex;
   align-items: center;
   gap: 20px;
+  padding: 15px 20px;
+  background: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  flex-shrink: 0;
+}
+
+.content-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 20px;
+  padding-bottom: 0; /* Remove bottom padding so list goes to edge */
+}
+
+.stats-overview {
+  display: flex;
+  gap: 20px;
   margin-bottom: 20px;
+  flex-shrink: 0;
+}
+
+.chart-container {
+  height: 250px;
+  margin-bottom: 20px;
+  background: white;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+.list {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 20px; /* Add padding at bottom of list */
+  /* Hide scrollbar for cleaner look on mobile if desired, but standard is fine */
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.5rem;
 }
 
 button {
@@ -84,6 +166,42 @@ button {
   background: white;
   cursor: pointer;
   font-size: 1rem;
+}
+
+.stats-overview {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.stat-card {
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  flex: 1;
+  text-align: center;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #2196f3;
+}
+
+.chart-container {
+  height: 250px;
+  margin-bottom: 20px;
+  background: white;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .game-item {
@@ -99,44 +217,43 @@ button {
   background: #e0e0e0;
 }
 
-.game-info {
-  display: flex;
-  justify-content: space-between;
-  font-weight: bold;
-  margin-bottom: 5px;
-}
-
-.game-details {
-  margin-top: 15px;
-  padding-top: 10px;
-  border-top: 1px solid #ccc;
-}
-
-.rounds-table {
+.game-summary {
   display: flex;
   flex-direction: column;
   gap: 5px;
 }
 
-.table-header {
+.game-info {
   display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.type {
   font-weight: bold;
-  border-bottom: 1px solid #ddd;
-  padding-bottom: 5px;
+  color: #333;
+  background: #ddd;
+  padding: 2px 6px;
+  border-radius: 4px;
 }
 
-.table-row {
-  display: flex;
-  padding: 5px 0;
-  border-bottom: 1px solid #eee;
+.delete-btn {
+  background: transparent;
+  border: none;
+  padding: 4px;
+  font-size: 1.2rem;
 }
 
-.round-num {
-  width: 30px;
+.result {
   font-weight: bold;
+  font-size: 1.1rem;
 }
 
-.throws {
-  flex: 1;
+.empty {
+  text-align: center;
+  color: #666;
+  margin-top: 40px;
 }
 </style>

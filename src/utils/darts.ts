@@ -2,16 +2,17 @@ export interface DartScore {
   score: number
   multiplier: 1 | 2 | 3
   label: string // e.g., "T20", "D1", "Bull", "Miss"
+  isInner?: boolean
 }
 
 const SLICES = [20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5]
 
 // Radii in normalized units (0-100, where 100 is outer edge of double ring)
-const R_BULL_INNER = 3.7
-const R_BULL_OUTER = 9.4
-const R_TRIPLE_INNER = 58.2
-const R_TRIPLE_OUTER = 63.0
-const R_DOUBLE_INNER = 95.3
+const R_BULL_INNER = 6.0
+const R_BULL_OUTER = 15.0
+const R_TRIPLE_INNER = 55.0
+const R_TRIPLE_OUTER = 65.0
+const R_DOUBLE_INNER = 90.0
 const R_DOUBLE_OUTER = 100.0
 
 export function getScoreFromCoordinates(x: number, y: number): DartScore {
@@ -77,6 +78,7 @@ export function getScoreFromCoordinates(x: number, y: number): DartScore {
 
   let multiplier: 1 | 2 | 3 = 1
   let prefix = 'S'
+  let isInner = false
 
   if (distance >= R_TRIPLE_INNER && distance <= R_TRIPLE_OUTER) {
     multiplier = 3
@@ -84,11 +86,14 @@ export function getScoreFromCoordinates(x: number, y: number): DartScore {
   } else if (distance >= R_DOUBLE_INNER && distance <= R_DOUBLE_OUTER) {
     multiplier = 2
     prefix = 'D'
+  } else if (distance < R_TRIPLE_INNER) {
+    isInner = true
   }
 
   return {
     score: score,
     multiplier: multiplier,
     label: `${prefix}${score}`,
+    isInner: isInner,
   }
 }

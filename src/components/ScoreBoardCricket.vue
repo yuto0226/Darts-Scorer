@@ -56,13 +56,13 @@ const targets = [20, 19, 18, 17, 16, 15, 25]
         </div>
       </div>
     </div>
-    <div class="info">Round: {{ store.currentRound }}</div>
   </div>
 </template>
 
 <style scoped>
 .scoreboard-cricket {
-  margin-bottom: 10px;
+  width: 100%;
+  margin-bottom: 30px;
 }
 .score {
   font-size: 4rem;
@@ -74,28 +74,34 @@ const targets = [20, 19, 18, 17, 16, 15, 25]
 }
 .grid {
   display: flex;
-  justify-content: center;
-  gap: 10px;
+  justify-content: space-between;
+  gap: 2px;
+  width: 100%;
 }
 .row {
   display: flex;
   flex-direction: column;
   align-items: center;
   border: 1px solid #ddd;
-  padding: 5px;
+  padding: 2px;
   border-radius: 4px;
-  min-width: 40px;
+  min-width: 32px;
+  flex: 1;
 }
 .label {
   font-weight: bold;
-  margin-bottom: 5px;
+  margin-bottom: 2px;
+  font-size: 0.9rem;
 }
-.mark {
-  font-size: 1.5rem;
-  font-family: monospace;
+.mark-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 30px;
 }
-.mark.closed {
-  color: #42b883;
+.mark-svg {
+  width: 30px;
+  height: 30px;
 }
 .opponent-closed {
   font-size: 1rem;

@@ -18,6 +18,7 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, T
 
 const props = defineProps<{
   game: GameRecord
+  height?: number
 }>()
 
 const chartData = computed(() => {
@@ -35,15 +36,29 @@ const chartData = computed(() => {
     }, 0)
   })
 
+  const avgData = data.map((_, i) => {
+    const sum = data.slice(0, i + 1).reduce((a, b) => a + b, 0)
+    return sum / (i + 1)
+  })
+
   return {
     labels,
     datasets: [
       {
-        label: 'Score per Round',
+        label: 'Round Score',
         backgroundColor: '#2196f3',
         borderColor: '#2196f3',
         data,
         tension: 0.1,
+      },
+      {
+        label: 'Average',
+        backgroundColor: '#ff9800',
+        borderColor: '#ff9800',
+        data: avgData,
+        tension: 0.4,
+        pointRadius: 0,
+        borderWidth: 2,
       },
     ],
   }
@@ -54,7 +69,7 @@ const chartOptions = {
   maintainAspectRatio: false,
   plugins: {
     legend: {
-      display: false,
+      display: true,
     },
   },
   scales: {
@@ -102,7 +117,7 @@ const averageScore = computed(() => {
         rounds): <strong>{{ averageScore }}</strong>
       </p>
     </div>
-    <div class="chart-wrapper">
+    <div class="chart-wrapper" :style="{ height: height ? height + 'px' : '250px' }">
       <Line :data="chartData" :options="chartOptions" />
     </div>
   </div>
@@ -117,7 +132,7 @@ const averageScore = computed(() => {
   border: 1px solid #ddd;
 }
 .chart-wrapper {
-  height: 250px;
+  width: 100%;
 }
 .stats {
   margin-bottom: 10px;
