@@ -215,7 +215,7 @@ button {
 .stat-value {
   font-size: 1.2rem;
   font-weight: bold;
-  color: #2196f3;
+  color: #42b883;
 }
 
 .chart-container {
@@ -255,9 +255,9 @@ button {
 }
 
 .filters button.active {
-  background: #2196f3;
+  background: #42b883;
   color: white;
-  border-color: #2196f3;
+  border-color: #42b883;
 }
 
 .list {

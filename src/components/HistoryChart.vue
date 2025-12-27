@@ -46,8 +46,8 @@ const chartData = computed(() => {
     datasets: [
       {
         label: 'Round Score',
-        backgroundColor: '#2196f3',
-        borderColor: '#2196f3',
+        backgroundColor: '#42b883',
+        borderColor: '#42b883',
         data,
         tension: 0.1,
       },

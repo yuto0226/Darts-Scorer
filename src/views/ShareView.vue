@@ -169,7 +169,7 @@ const goHome = () => {
 }
 
 .cta-btn {
-  background: #2196f3;
+  background: #42b883;
   color: white;
   border: none;
   padding: 12px 30px;
@@ -227,7 +227,7 @@ button {
 
 .share-btn {
   flex: 1;
-  background-color: #2196f3;
+  background-color: #42b883;
   color: white;
   border: none;
   font-weight: bold;
@@ -260,7 +260,7 @@ button {
 
 .type-badge {
   font-weight: bold;
-  background: #2196f3;
+  background: #42b883;
   color: white;
   padding: 4px 8px;
   border-radius: 4px;

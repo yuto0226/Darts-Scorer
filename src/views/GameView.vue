@@ -511,7 +511,7 @@ button {
 }
 
 .next-btn {
-  background-color: #2196f3;
+  background-color: #42b883;
   color: white;
   border: none;
   font-weight: bold;
@@ -569,7 +569,7 @@ button {
   text-align: center;
   font-size: 1.2rem;
   font-weight: bold;
-  color: #2196f3;
+  color: #42b883;
   background: rgba(255, 255, 255, 0.9);
   padding: 2px 10px;
   border-radius: 4px;

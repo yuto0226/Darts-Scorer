@@ -195,7 +195,7 @@ button {
   color: #666;
 }
 .ok-btn {
-  background: #2196f3;
+  background: #42b883;
   color: white;
   width: 100%;
 }

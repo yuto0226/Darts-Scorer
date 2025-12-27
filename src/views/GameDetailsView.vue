@@ -278,7 +278,7 @@ button {
 
 .share-btn {
   flex: 1;
-  background-color: #2196f3;
+  background-color: #42b883;
   color: white;
   border: none;
   font-weight: bold;
@@ -291,8 +291,8 @@ button {
 }
 
 .share-btn-icon {
-  border-color: #2196f3;
-  color: #2196f3;
+  border-color: #42b883;
+  color: #42b883;
 }
 
 .summary {
@@ -342,7 +342,7 @@ button {
 
 .type-badge {
   font-weight: bold;
-  background: #2196f3;
+  background: #42b883;
   color: white;
   padding: 4px 8px;
   border-radius: 4px;
