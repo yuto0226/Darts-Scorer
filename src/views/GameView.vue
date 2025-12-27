@@ -364,7 +364,7 @@ watch(
           <template v-else>
             <span v-for="(step, i) in checkoutSuggestion.steps" :key="i" class="checkout-step">
               {{ formatCheckoutStep(step)
-              }}<span v-if="i < checkoutSuggestion.steps.length - 1"> <BsArrowRight /> </span>
+              }}<span v-if="i < checkoutSuggestion.steps.length - 1"> → </span>
             </span>
           </template>
         </div>
@@ -571,7 +571,6 @@ button {
 
 .checkout-guide-container {
   min-height: 38px;
-  margin-bottom: 10px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -581,16 +580,16 @@ button {
   text-align: center;
   font-size: 1.2rem;
   font-weight: bold;
-  color: #42b883;
-  background: rgba(255, 255, 255, 0.9);
   padding: 2px 10px;
   border-radius: 4px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   white-space: nowrap;
+  background-color: rgba(1, 1, 1, 0.08);
+  width: 100vh;
+  border: 2px rgba(1, 1, 1, 0.5) solid;
 }
 
 .checkout-guide.is-setup {
-  color: #ff9800;
+  color: black;
 }
 
 .checkout-step {
