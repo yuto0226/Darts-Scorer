@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { BsTrash3 } from '@kalimahapps/vue-icons/bs'
 import { useHistoryStore, type GameRecord } from '../stores/history'
 import StatsChart from '../components/StatsChart.vue'
 
@@ -111,7 +112,9 @@ const deleteGame = (e: Event, id: string) => {
             <div class="game-info">
               <span class="type">{{ getGameLabel(game) }}</span>
               <span class="date">{{ new Date(game.date).toLocaleString() }}</span>
-              <button class="delete-btn" @click="deleteGame($event, game.id)">🗑️</button>
+              <button class="delete-btn" @click="deleteGame($event, game.id)">
+                <BsTrash3 />
+              </button>
             </div>
             <div class="result">
               {{ getResultLabel(game) }}
@@ -301,6 +304,12 @@ button {
   border: none;
   padding: 4px;
   font-size: 1.2rem;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.delete-btn:hover {
+  color: #dc3545;
 }
 
 .result {

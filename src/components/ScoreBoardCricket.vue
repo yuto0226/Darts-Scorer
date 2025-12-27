@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useGameStore } from '../stores/game'
+import { BsLockFill } from '@kalimahapps/vue-icons/bs'
 
 const store = useGameStore()
 const targets = [20, 19, 18, 17, 16, 15, 25]
@@ -54,7 +55,7 @@ const targets = [20, 19, 18, 17, 16, 15, 25]
           :class="{ active: store.cricketState.opponentClosed[t] }"
           @click="store.toggleOpponentClosed(t)"
         >
-          🔒
+          <BsLockFill />
         </div>
       </div>
     </div>

@@ -19,6 +19,7 @@
     "format": "prettier --write --experimental-cli src/"
   },
   "dependencies": {
+    "@kalimahapps/vue-icons": "^1.9.5",
     "chart.js": "^4.5.1",
     "lz-string": "^1.5.0",
     "pinia": "^3.0.4",

@@ -3,6 +3,7 @@ import { onMounted, watch, ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useGameStore, type GameType } from '../stores/game'
 import { useHistoryStore, type RoundRecord, type GameRecord } from '../stores/history'
+import { BsArrowRight } from '@kalimahapps/vue-icons/bs'
 import Dartboard from '../components/Dartboard.vue'
 import ScoreBoard01 from '../components/ScoreBoard01.vue'
 import ScoreBoardCricket from '../components/ScoreBoardCricket.vue'
@@ -359,7 +360,7 @@ watch(
           <template v-else>
             <span v-for="(step, i) in checkoutSuggestion.steps" :key="i" class="checkout-step">
               {{ formatCheckoutStep(step)
-              }}<span v-if="i < checkoutSuggestion.steps.length - 1"> → </span>
+              }}<span v-if="i < checkoutSuggestion.steps.length - 1"> <BsArrowRight /> </span>
             </span>
           </template>
         </div>
