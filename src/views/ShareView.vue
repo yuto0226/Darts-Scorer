@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import type { GameRecord } from '../stores/history'
 import HistoryChart from '../components/HistoryChart.vue'
+import { decodeGameRecord } from '../utils/codec'
 
 const route = useRoute()
 const router = useRouter()
@@ -17,8 +18,7 @@ onMounted(() => {
     return
   }
   try {
-    const json = atob(data)
-    game.value = JSON.parse(json)
+    game.value = decodeGameRecord(data)
   } catch (e) {
     console.error(e)
     error.value = 'Invalid data'

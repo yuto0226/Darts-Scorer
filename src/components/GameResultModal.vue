@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { GameRecord } from '../stores/history'
 import HistoryChart from './HistoryChart.vue'
+import { encodeGameRecord } from '../utils/codec'
 
 defineProps<{
   visible: boolean
@@ -14,9 +15,8 @@ const emit = defineEmits<{
 }>()
 
 const shareGame = (record: GameRecord) => {
-  const json = JSON.stringify(record)
-  const base64 = btoa(json)
-  const url = `${window.location.origin}/share?data=${base64}`
+  const compressed = encodeGameRecord(record)
+  const url = `${window.location.origin}/share?data=${compressed}`
 
   if (navigator.share) {
     navigator

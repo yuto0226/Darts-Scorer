@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useHistoryStore } from '../stores/history'
 import HistoryChart from '../components/HistoryChart.vue'
+import { encodeGameRecord } from '../utils/codec'
 
 const route = useRoute()
 const router = useRouter()
@@ -37,9 +38,8 @@ const deleteGame = () => {
 
 const shareGame = () => {
   if (!game.value) return
-  const json = JSON.stringify(game.value)
-  const base64 = btoa(json)
-  const url = `${window.location.origin}/share?data=${base64}`
+  const compressed = encodeGameRecord(game.value)
+  const url = `${window.location.origin}/share?data=${compressed}`
 
   if (navigator.share) {
     navigator
@@ -68,10 +68,7 @@ const shareGame = () => {
     <div class="content-scroll">
       <div class="summary">
         <div class="summary-row top-row">
-          <span
-            class="result-badge"
-            :class="{ win: isWin, finish: game.type === 'count_up' }"
-          >
+          <span class="result-badge" :class="{ win: isWin, finish: game.type === 'count_up' }">
             {{ game.type === 'count_up' ? 'FINISH' : isWin ? 'WIN' : 'LOSE' }}
           </span>
           <span class="type-badge">{{ gameTypeLabel }}</span>
