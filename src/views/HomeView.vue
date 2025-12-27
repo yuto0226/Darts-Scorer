@@ -42,9 +42,10 @@ const viewHistory = () => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100dvh; /* Use dvh for mobile */
+  min-height: 100dvh;
   padding: 20px;
   text-align: center;
+  box-sizing: border-box;
 }
 
 .menu {
