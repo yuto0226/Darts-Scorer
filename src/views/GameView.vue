@@ -115,17 +115,86 @@ const buildGameRecord = (winnerOverride?: string): GameRecord => {
   const rounds: RoundRecord[] = []
   const history = gameStore.throwHistory
 
+  let currentScore01 = gameStore.targetScore
+  let currentScoreCountUp = 0
+  let currentScoreCricket = 0
+  const cricketMarks: Record<number, number> = {
+    15: 0,
+    16: 0,
+    17: 0,
+    18: 0,
+    19: 0,
+    20: 0,
+    25: 0,
+  }
+
   const maxRound = history.length > 0 ? history[history.length - 1]!.round : 0
   for (let r = 1; r <= maxRound; r++) {
     const throws = history
       .filter((t) => t.round === r)
       .sort((a, b) => a.throwIndex - b.throwIndex)
       .map((t) => t.score)
+
+    let scoreAfter: number | Record<number, number> = 0
+
+    if (gameStore.gameType === '01') {
+      const startScore = currentScore01
+      let isBust = false
+      throws.forEach((t) => {
+        if (isBust) return
+        let val = t.score * t.multiplier
+        if (t.score === 25 || t.score === 50) val = 50
+
+        const newScore = currentScore01 - val
+        if (newScore < 0) {
+          isBust = true
+        } else {
+          currentScore01 = newScore
+        }
+      })
+      if (isBust) {
+        currentScore01 = startScore
+      }
+      scoreAfter = currentScore01
+    } else if (gameStore.gameType === 'count_up') {
+      throws.forEach((t) => {
+        let val = t.score * t.multiplier
+        if (t.score === 25 || t.score === 50) val = 50
+        currentScoreCountUp += val
+      })
+      scoreAfter = currentScoreCountUp
+    } else if (gameStore.gameType === 'cricket') {
+      throws.forEach((t) => {
+        const num = t.score
+        let target = num
+        let hits = t.multiplier
+        if (num === 25 || num === 50) {
+          target = 25
+          if (num === 50) hits = 2
+        }
+
+        if (cricketMarks[target] !== undefined) {
+          const current = cricketMarks[target]
+          if (current < 3) {
+            const needed = 3 - current
+            const used = Math.min(hits, needed)
+            cricketMarks[target] += used
+            hits -= used
+          }
+          if (hits > 0) {
+            // Assuming no opponent closed for history reconstruction
+            currentScoreCricket += hits * target
+          }
+        }
+      })
+      scoreAfter = currentScoreCricket
+    }
+
     if (throws.length > 0) {
       rounds.push({
         round: r,
         throws: throws,
-        scoreAfter: 0,
+        scoreAfter: scoreAfter,
       })
     }
   }

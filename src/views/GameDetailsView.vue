@@ -25,6 +25,81 @@ const isWin = computed(() => {
   return game.value.winner === 'Win' || game.value.winner === 'Player 1'
 })
 
+const roundsWithRunningScore = computed(() => {
+  if (!game.value) return []
+
+  const rounds = []
+  let currentScore01 = game.value.targetScore || 301
+  let currentScoreCountUp = 0
+  let currentScoreCricket = 0
+  const cricketMarks: Record<number, number> = {
+    15: 0,
+    16: 0,
+    17: 0,
+    18: 0,
+    19: 0,
+    20: 0,
+    25: 0,
+  }
+
+  for (const round of game.value.rounds) {
+    let scoreAfter = round.scoreAfter
+
+    // Recalculate for display to handle old records or ensure consistency
+    if (game.value.type === '01') {
+      const startScore = currentScore01
+      let isBust = false
+      round.throws.forEach((t) => {
+        if (isBust) return
+        let val = t.score * t.multiplier
+        if (t.score === 25 || t.score === 50) val = 50
+        const newScore = currentScore01 - val
+        if (newScore < 0) isBust = true
+        else currentScore01 = newScore
+      })
+      if (isBust) currentScore01 = startScore
+      scoreAfter = currentScore01
+    } else if (game.value.type === 'count_up') {
+      round.throws.forEach((t) => {
+        let val = t.score * t.multiplier
+        if (t.score === 25 || t.score === 50) val = 50
+        currentScoreCountUp += val
+      })
+      scoreAfter = currentScoreCountUp
+    } else if (game.value.type === 'cricket') {
+      round.throws.forEach((t) => {
+        const num = t.score
+        let target = num
+        let hits = t.multiplier
+        if (num === 25 || num === 50) {
+          target = 25
+          if (num === 50) hits = 2
+        }
+
+        if (cricketMarks[target] !== undefined) {
+          const current = cricketMarks[target]
+          if (current < 3) {
+            const needed = 3 - current
+            const used = Math.min(hits, needed)
+            cricketMarks[target] += used
+            hits -= used
+          }
+          if (hits > 0) {
+            currentScoreCricket += hits * target
+          }
+        }
+      })
+      scoreAfter = currentScoreCricket
+    }
+
+    rounds.push({
+      ...round,
+      scoreAfter,
+    })
+  }
+  return rounds
+})
+
 const goBack = () => {
   router.push('/history')
 }
@@ -112,7 +187,7 @@ const shareGame = () => {
             <span>Throws</span>
             <span>Score</span>
           </div>
-          <div v-for="round in game.rounds" :key="round.round" class="table-row">
+          <div v-for="round in roundsWithRunningScore" :key="round.round" class="table-row">
             <span class="round-num">{{ round.round }}</span>
             <span class="throws">
               {{ round.throws.map((t) => t.label).join(', ') }}
