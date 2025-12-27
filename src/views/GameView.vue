@@ -174,11 +174,11 @@ const buildGameRecord = (winnerOverride?: string): GameRecord => {
         }
 
         if (cricketMarks[target] !== undefined) {
-          const current = cricketMarks[target]
+          const current = cricketMarks[target]!
           if (current < 3) {
             const needed = 3 - current
             const used = Math.min(hits, needed)
-            cricketMarks[target] += used
+            cricketMarks[target]! += used
             hits -= used
           }
           if (hits > 0) {
