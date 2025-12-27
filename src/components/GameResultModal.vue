@@ -40,21 +40,23 @@ const shareGame = (record: GameRecord) => {
       <h2 v-if="isAborted">End Game</h2>
       <h2 v-else>Game Over!</h2>
 
-      <h1 v-if="gameRecord?.type === 'count_up'" class="result-text">
-        Score: {{ gameRecord.finalScore }}
-      </h1>
-      <h1 v-else-if="winner && !isAborted" class="result-text">{{ winner }}</h1>
+      <div class="modal-body">
+        <h1 v-if="gameRecord?.type === 'count_up'" class="result-text">
+          Score: {{ gameRecord.finalScore }}
+        </h1>
+        <h1 v-else-if="winner && !isAborted" class="result-text">{{ winner }}</h1>
 
-      <div v-if="gameRecord?.stats && !isAborted" class="stats-summary">
-        <span v-if="gameRecord.stats.ppd">PPD: {{ gameRecord.stats.ppd }}</span>
-        <span v-if="gameRecord.stats.mpr">MPR: {{ gameRecord.stats.mpr }}</span>
+        <div v-if="gameRecord?.stats && !isAborted" class="stats-summary">
+          <span v-if="gameRecord.stats.ppd">PPD: {{ gameRecord.stats.ppd }}</span>
+          <span v-if="gameRecord.stats.mpr">MPR: {{ gameRecord.stats.mpr }}</span>
+        </div>
+
+        <div v-if="gameRecord && !isAborted" class="chart-preview">
+          <HistoryChart :game="gameRecord" :height="200" />
+        </div>
+
+        <p v-if="isAborted" style="margin: 10px 0 5px 0; font-weight: bold">Select result:</p>
       </div>
-
-      <div v-if="gameRecord && !isAborted" class="chart-preview">
-        <HistoryChart :game="gameRecord" :height="300" />
-      </div>
-
-      <p v-if="isAborted">Select result:</p>
 
       <div class="actions">
         <template v-if="isAborted">
@@ -89,7 +91,7 @@ const shareGame = (record: GameRecord) => {
 
 .modal-content {
   background: white;
-  padding: 20px;
+  padding: 15px;
   border-radius: 12px;
   width: 90%;
   max-width: 500px;
@@ -99,6 +101,14 @@ const shareGame = (record: GameRecord) => {
   display: flex;
   flex-direction: column;
   margin: 20px; /* Add margin to ensure it doesn't touch screen edges */
+  overflow: hidden;
+}
+
+.modal-body {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  padding: 0; /* Removed padding to align chart with buttons */
 }
 
 .chart-preview {
@@ -109,6 +119,7 @@ const shareGame = (record: GameRecord) => {
 
 h2 {
   margin-top: 0;
+  margin-bottom: 5px;
   color: #333;
   flex-shrink: 0;
 }
@@ -116,14 +127,14 @@ h2 {
 .actions {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-top: 20px;
-  overflow-y: auto;
-  padding-bottom: 10px;
+  gap: 8px;
+  margin-top: 10px;
+  padding-bottom: 0px;
+  flex-shrink: 0;
 }
 
 button {
-  padding: 12px;
+  padding: 10px;
   border: none;
   border-radius: 6px;
   font-size: 1rem;
@@ -160,17 +171,17 @@ button {
 }
 
 .result-text {
-  font-size: 3rem;
+  font-size: 2.5rem;
   font-weight: 900;
   color: #e91e63;
-  margin: 10px 0;
+  margin: 0 0 5px 0;
 }
 
 .stats-summary {
   display: flex;
   gap: 20px;
   justify-content: center;
-  margin: 10px 0;
+  margin: 5px 0;
   font-size: 1.2rem;
   font-weight: bold;
   color: #333;
