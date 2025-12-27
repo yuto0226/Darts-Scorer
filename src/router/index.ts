@@ -3,6 +3,7 @@ import HomeView from '../views/HomeView.vue'
 import GameView from '../views/GameView.vue'
 import HistoryView from '../views/HistoryView.vue'
 import GameDetailsView from '../views/GameDetailsView.vue'
+import ShareView from '../views/ShareView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -26,6 +27,11 @@ const router = createRouter({
       path: '/history/:id',
       name: 'game-details',
       component: GameDetailsView,
+    },
+    {
+      path: '/share',
+      name: 'share',
+      component: ShareView,
     },
   ],
 })

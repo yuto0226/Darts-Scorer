@@ -12,6 +12,26 @@ defineProps<{
 const emit = defineEmits<{
   (e: 'close', result: 'Win' | 'Loss' | 'Abort' | 'Discard' | 'Cancel'): void
 }>()
+
+const shareGame = (record: GameRecord) => {
+  const json = JSON.stringify(record)
+  const base64 = btoa(json)
+  const url = `${window.location.origin}/share?data=${base64}`
+
+  if (navigator.share) {
+    navigator
+      .share({
+        title: 'Darts Game Result',
+        text: `Check out my darts game!`,
+        url: url,
+      })
+      .catch(console.error)
+  } else {
+    navigator.clipboard.writeText(url).then(() => {
+      alert('Link copied to clipboard!')
+    })
+  }
+}
 </script>
 
 <template>
@@ -40,6 +60,9 @@ const emit = defineEmits<{
           <button class="cancel-btn" @click="emit('close', 'Cancel')">Cancel</button>
         </template>
         <template v-else>
+          <button class="share-btn" v-if="gameRecord" @click="shareGame(gameRecord)">
+            Share Result
+          </button>
           <button class="ok-btn" @click="emit('close', 'Win')">OK</button>
         </template>
       </div>
@@ -124,6 +147,11 @@ button {
 }
 .ok-btn {
   background: #2196f3;
+  color: white;
+  width: 100%;
+}
+.share-btn {
+  background: #ff9800;
   color: white;
   width: 100%;
 }

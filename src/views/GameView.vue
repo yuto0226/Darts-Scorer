@@ -248,10 +248,17 @@ watch(
           :class="{ 'is-setup': checkoutSuggestion.isSetup }"
         >
           {{ checkoutSuggestion.isSetup ? 'Setup:' : 'Checkout:' }}
-          
-          <template v-if="checkoutSuggestion.finalOptions && checkoutSuggestion.finalOptions.length > 0">
-             <span v-for="(opt, i) in checkoutSuggestion.finalOptions" :key="i" class="checkout-step">
-              {{ formatCheckoutStep(opt) }}<span v-if="i < checkoutSuggestion.finalOptions.length - 1"> / </span>
+
+          <template
+            v-if="checkoutSuggestion.finalOptions && checkoutSuggestion.finalOptions.length > 0"
+          >
+            <span
+              v-for="(opt, i) in checkoutSuggestion.finalOptions"
+              :key="i"
+              class="checkout-step"
+            >
+              {{ formatCheckoutStep(opt)
+              }}<span v-if="i < checkoutSuggestion.finalOptions.length - 1"> / </span>
             </span>
           </template>
           <template v-else>

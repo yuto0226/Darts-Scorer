@@ -1,15 +1,29 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useHistoryStore } from '../stores/history'
+import type { GameRecord } from '../stores/history'
 import HistoryChart from '../components/HistoryChart.vue'
 
 const route = useRoute()
 const router = useRouter()
-const historyStore = useHistoryStore()
 
-const gameId = route.params.id as string
-const game = computed(() => historyStore.games.find((g) => g.id === gameId))
+const game = ref<GameRecord | null>(null)
+const error = ref('')
+
+onMounted(() => {
+  const data = route.query.data as string
+  if (!data) {
+    error.value = 'No data provided'
+    return
+  }
+  try {
+    const json = atob(data)
+    game.value = JSON.parse(json)
+  } catch (e) {
+    console.error(e)
+    error.value = 'Invalid data'
+  }
+})
 
 const gameTypeLabel = computed(() => {
   if (!game.value) return ''
@@ -24,51 +38,16 @@ const isWin = computed(() => {
   return game.value.winner === 'Win' || game.value.winner === 'Player 1'
 })
 
-const goBack = () => {
-  router.push('/history')
-}
-
-const deleteGame = () => {
-  if (confirm('Are you sure you want to delete this game?')) {
-    historyStore.deleteGame(gameId)
-    router.push('/history')
-  }
-}
-
-const shareGame = () => {
-  if (!game.value) return
-  const json = JSON.stringify(game.value)
-  const base64 = btoa(json)
-  const url = `${window.location.origin}/share?data=${base64}`
-
-  if (navigator.share) {
-    navigator
-      .share({
-        title: 'Darts Game Result',
-        text: `Check out my darts game!`,
-        url: url,
-      })
-      .catch(console.error)
-  } else {
-    navigator.clipboard.writeText(url).then(() => {
-      alert('Link copied to clipboard!')
-    })
-  }
+const goHome = () => {
+  router.push('/')
 }
 </script>
 
 <template>
   <div class="game-details" v-if="game">
-    <header class="sticky-header">
-      <button @click="goBack">Back</button>
-      <h1>Game Details</h1>
-      <div class="actions-right">
-        <button class="share-btn-icon" @click="shareGame">🔗</button>
-        <button class="delete-btn" @click="deleteGame">🗑️</button>
-      </div>
-    </header>
-
     <div class="content-scroll">
+      <h1 class="share-title">Game Result</h1>
+
       <div class="summary">
         <div class="summary-row top-row">
           <span class="result-badge" :class="{ win: isWin }">{{ isWin ? 'WIN' : 'LOSE' }}</span>
@@ -97,6 +76,11 @@ const shareGame = () => {
         <HistoryChart :game="game" />
       </div>
 
+      <div class="cta-section">
+        <p>Track your own darts scores!</p>
+        <button class="cta-btn" @click="goHome">Start Scoring</button>
+      </div>
+
       <div class="rounds-section">
         <h3>Round History</h3>
         <div class="rounds-table">
@@ -120,8 +104,8 @@ const shareGame = () => {
     </div>
   </div>
   <div v-else class="not-found">
-    <p>Game not found.</p>
-    <button @click="goBack">Back to History</button>
+    <p>{{ error || 'Loading...' }}</p>
+    <button @click="goHome">Go Home</button>
   </div>
 </template>
 
@@ -133,20 +117,14 @@ const shareGame = () => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  background: #fff;
 }
 
-.sticky-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 15px 20px;
-  background: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  z-index: 10;
-  flex-shrink: 0;
-  position: relative;
-  height: 60px; /* Fixed height for consistency */
-  box-sizing: border-box;
+.share-title {
+  text-align: center;
+  margin: 0 0 20px 0;
+  font-size: 1.8rem;
+  color: #333;
 }
 
 .content-scroll {
@@ -155,13 +133,41 @@ const shareGame = () => {
   padding: 20px;
 }
 
-h1 {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  margin: 0;
-  font-size: 1.5rem;
-  white-space: nowrap;
+.cta-section {
+  text-align: center;
+  margin: 0 0 20px 0;
+  padding: 20px;
+  background: #e3f2fd;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.15);
+}
+
+.cta-section p {
+  margin: 0 0 15px 0;
+  font-size: 1.1rem;
+  color: #1565c0;
+  font-weight: bold;
+}
+
+.cta-btn {
+  background: #2196f3;
+  color: white;
+  border: none;
+  padding: 12px 30px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  border-radius: 25px;
+  box-shadow: 0 4px 6px rgba(33, 150, 243, 0.3);
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+  width: auto;
+  height: auto;
+  display: inline-flex; /* Ensure it respects text-align: center */
+}
+
+.cta-btn:active {
+  transform: scale(0.98);
 }
 
 button {
@@ -177,24 +183,9 @@ button {
   justify-content: center;
 }
 
-.actions-right {
-  display: flex;
-  gap: 10px;
-}
-
-.delete-btn {
-  border-color: #ff5252;
-  color: #ff5252;
-}
-
-.share-btn-icon {
-  border-color: #2196f3;
-  color: #2196f3;
-}
-
 .summary {
   background: #f5f5f5;
-  padding: 15px;
+  padding: 20px;
   border-radius: 8px;
   margin-bottom: 20px;
   display: flex;
@@ -265,8 +256,12 @@ button {
 }
 
 .chart-section {
-  margin-bottom: 30px;
-  height: auto;
+  margin-bottom: 20px;
+  height: auto; /* Allow height to adjust to content */
+}
+
+.rounds-section {
+  margin-bottom: 20px;
 }
 
 .rounds-table {

@@ -54,10 +54,10 @@ export function getCheckoutGuide(score: number, dartsRemaining: number): Checkou
       // Let's just return them all in finalOptions
       // And steps can be empty or just the first one?
       // If we have finalOptions, the UI should display them instead of steps[0]
-      return { 
-        steps: [oneDartOptions[0]], 
+      return {
+        steps: [oneDartOptions[0]!],
         finalOptions: oneDartOptions,
-        isSetup: false 
+        isSetup: false,
       }
     }
   }
