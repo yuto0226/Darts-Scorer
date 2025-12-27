@@ -3,7 +3,7 @@ import { onMounted, watch, ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useGameStore, type GameType } from '../stores/game'
 import { useHistoryStore, type RoundRecord, type GameRecord } from '../stores/history'
-import { BsArrowRight } from '@kalimahapps/vue-icons/bs'
+import { BsArrowRight, BsDoorOpen, BsArrowCounterclockwise } from '@kalimahapps/vue-icons/bs'
 import Dartboard from '../components/Dartboard.vue'
 import ScoreBoard01 from '../components/ScoreBoard01.vue'
 import ScoreBoardCricket from '../components/ScoreBoardCricket.vue'
@@ -325,9 +325,13 @@ watch(
 <template>
   <div class="game-view">
     <header class="game-header">
-      <button @click="confirmExit" class="back-btn">End Game</button>
+      <button @click="confirmExit" class="back-btn">
+        <BsDoorOpen style="margin-right: 6px" />Leave
+      </button>
       <div class="round-info">R{{ gameStore.currentRound }}</div>
-      <button @click="onUndo" :disabled="gameStore.throwHistory.length === 0">Undo</button>
+      <button @click="onUndo" :disabled="gameStore.throwHistory.length === 0">
+        <BsArrowCounterclockwise style="margin-right: 6px" />Undo
+      </button>
     </header>
 
     <div class="content">
@@ -378,15 +382,17 @@ watch(
         {{ specialMessage }}
       </div>
 
-      <div class="controls" v-if="!gameStore.isGameOver">
-        <button
-          v-if="gameStore.waitingForNextRound"
-          class="next-btn"
-          @click="gameStore.nextRound()"
-        >
-          NEXT ROUND
-        </button>
-        <button v-else class="miss-btn" @click="onMiss">MISS</button>
+      <div class="controls" :class="{ 'controls-hidden': gameStore.isGameOver }">
+        <template v-if="!gameStore.isGameOver">
+          <button
+            v-if="gameStore.waitingForNextRound"
+            class="next-btn"
+            @click="gameStore.nextRound()"
+          >
+            NEXT ROUND
+          </button>
+          <button v-else class="miss-btn" @click="onMiss">MISS</button>
+        </template>
       </div>
     </div>
 
@@ -495,9 +501,13 @@ button {
   width: 100%;
   display: flex;
   justify-content: center;
-  margin-top: 0; /* Remove margin */
+  margin-top: 0;
   flex-shrink: 0;
   padding-bottom: 10px;
+  min-height: 60px;
+}
+.controls-hidden {
+  visibility: hidden;
 }
 
 .miss-btn {
@@ -552,17 +562,11 @@ button {
 }
 
 .checkout-guide-container {
-  min-height: 32px; /* Use min-height instead of fixed height */
+  min-height: 38px;
   margin-bottom: 10px;
   display: flex;
   justify-content: center;
   align-items: center;
-}
-
-.checkout-guide-container:empty {
-  min-height: 0;
-  margin-bottom: 0;
-  height: 0;
 }
 
 .checkout-guide {
@@ -578,7 +582,7 @@ button {
 }
 
 .checkout-guide.is-setup {
-  color: #ff9800; /* Orange for setup */
+  color: #ff9800;
 }
 
 .checkout-step {

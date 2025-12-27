@@ -66,7 +66,7 @@ const shareGame = (record: GameRecord) => {
 <template>
   <div v-if="visible" class="modal-overlay">
     <div class="modal-content">
-      <h2 v-if="!showResult">End Game</h2>
+      <h2 v-if="!showResult">Leave ?</h2>
       <h2 v-else>Game Over!</h2>
 
       <div class="modal-body">
@@ -89,14 +89,12 @@ const shareGame = (record: GameRecord) => {
             <HistoryChart :game="gameRecord" :height="200" />
           </div>
         </template>
-
-        <p v-else style="margin: 10px 0 5px 0; font-weight: bold">Select result:</p>
       </div>
 
       <div class="actions">
         <template v-if="!showResult">
           <button class="loss-btn" @click="handleLoss">I Lost (Save)</button>
-          <button class="abort-btn" @click="handleClose('Discard')">Discard (No Save)</button>
+          <button class="abort-btn" @click="handleClose('Discard')">Discard</button>
           <button class="cancel-btn" @click="handleClose('Cancel')">Cancel</button>
         </template>
         <template v-else>
