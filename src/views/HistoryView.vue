@@ -56,6 +56,7 @@ const deleteGame = (e: Event, id: string) => {
     <header class="sticky-header">
       <button @click="goBack">Back</button>
       <h1>History</h1>
+      <div class="header-spacer"></div>
     </header>
 
     <div class="content-wrapper">
@@ -90,7 +91,9 @@ const deleteGame = (e: Event, id: string) => {
               <button class="delete-btn" @click="deleteGame($event, game.id)">🗑️</button>
             </div>
             <div class="result">
-              {{ getResultLabel(game) }} | Score: {{ game.finalScore }}
+              {{ getResultLabel(game) }}
+              <span v-if="game.type === '01'"> | Rounds: {{ game.rounds?.length || '-' }}</span>
+              <span v-else> | Score: {{ game.finalScore }}</span>
               <span v-if="game.stats?.ppd"> | PPD: {{ game.stats.ppd }}</span>
               <span v-if="game.stats?.mpr"> | MPR: {{ game.stats.mpr }}</span>
             </div>
@@ -108,55 +111,41 @@ const deleteGame = (e: Event, id: string) => {
   height: 100dvh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+}
+
+.content-wrapper {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
 }
 
 .sticky-header {
   display: flex;
   align-items: center;
-  gap: 20px;
+  justify-content: space-between;
   padding: 15px 20px;
   background: white;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   z-index: 10;
   flex-shrink: 0;
-}
-
-.content-wrapper {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  padding: 20px;
-  padding-bottom: 0; /* Remove bottom padding so list goes to edge */
-}
-
-.stats-overview {
-  display: flex;
-  gap: 20px;
-  margin-bottom: 20px;
-  flex-shrink: 0;
-}
-
-.chart-container {
-  height: 250px;
-  margin-bottom: 20px;
-  background: white;
-  padding: 10px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  flex-shrink: 0;
-}
-
-.list {
-  flex: 1;
-  overflow-y: auto;
-  padding-bottom: 20px; /* Add padding at bottom of list */
-  /* Hide scrollbar for cleaner look on mobile if desired, but standard is fine */
+  position: relative;
+  height: 60px; /* Fixed height for consistency */
+  box-sizing: border-box;
 }
 
 h1 {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
   margin: 0;
   font-size: 1.5rem;
+  white-space: nowrap;
+}
+
+.header-spacer {
+  width: 40px; /* Approximate width of Back button to balance if using flex, but absolute handles center */
+  visibility: hidden;
 }
 
 button {
@@ -166,6 +155,10 @@ button {
   background: white;
   cursor: pointer;
   font-size: 1rem;
+  height: 36px; /* Fixed height for consistency */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .stats-overview {

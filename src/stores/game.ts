@@ -187,7 +187,7 @@ export const useGameStore = defineStore('game', () => {
     if (throwHistory.value.length === 0) return
     // Only allow undo if in the same round
     const lastThrow = throwHistory.value[throwHistory.value.length - 1]
-    if (lastThrow && lastThrow.round !== currentRound.value) return
+    // if (lastThrow && lastThrow.round !== currentRound.value) return // Removed to allow full undo
 
     if (isGameOver.value) isGameOver.value = false
     if (waitingForNextRound.value) waitingForNextRound.value = false
@@ -218,6 +218,12 @@ export const useGameStore = defineStore('game', () => {
       .filter((t) => t.round === currentRound.value)
       .sort((a, b) => a.throwIndex - b.throwIndex)
       .map((t) => t.score)
+
+    // If we undid the first throw of a round (or a bust), we might be left at the end of the previous round.
+    // We need to advance to the correct round state.
+    if (lastThrow && currentRound.value < lastThrow.round) {
+      internalNextTurn()
+    }
   }
 
   function toggleOpponentClosed(target: number) {

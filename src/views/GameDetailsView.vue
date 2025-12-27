@@ -61,8 +61,10 @@ const deleteGame = () => {
             <span class="value">{{ game.stats.mpr }}</span>
           </div>
           <div class="stat-item">
-            <span class="label">Final Score</span>
-            <span class="value">{{ game.finalScore }}</span>
+            <span class="label">{{ game.type === '01' ? 'Rounds' : 'Final Score' }}</span>
+            <span class="value">{{
+              game.type === '01' ? game.rounds?.length || '-' : game.finalScore
+            }}</span>
           </div>
         </div>
       </div>
@@ -118,6 +120,9 @@ const deleteGame = () => {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   z-index: 10;
   flex-shrink: 0;
+  position: relative;
+  height: 60px; /* Fixed height for consistency */
+  box-sizing: border-box;
 }
 
 .content-scroll {
@@ -127,8 +132,12 @@ const deleteGame = () => {
 }
 
 h1 {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
   margin: 0;
   font-size: 1.5rem;
+  white-space: nowrap;
 }
 
 button {
@@ -137,6 +146,11 @@ button {
   border: 1px solid #ccc;
   background: white;
   cursor: pointer;
+  font-size: 1rem;
+  height: 36px; /* Fixed height for consistency */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .delete-btn {

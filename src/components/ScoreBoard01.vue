@@ -13,7 +13,7 @@ const store = useGameStore()
 <style scoped>
 .scoreboard-01 {
   text-align: center;
-  margin-bottom: 40px;
+  /* margin-bottom: 40px; Removed to allow parent to control spacing */
 }
 .main-score {
   font-size: 6rem;

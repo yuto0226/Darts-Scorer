@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, watch, ref } from 'vue'
+import { onMounted, watch, ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useGameStore, type GameType } from '../stores/game'
 import { useHistoryStore, type RoundRecord, type GameRecord } from '../stores/history'
@@ -8,6 +8,7 @@ import ScoreBoard01 from '../components/ScoreBoard01.vue'
 import ScoreBoardCricket from '../components/ScoreBoardCricket.vue'
 import GameResultModal from '../components/GameResultModal.vue'
 import type { DartScore } from '../utils/darts'
+import { getCheckoutGuide, type CheckoutTarget, type CheckoutGuide } from '../utils/checkout'
 
 const route = useRoute()
 const router = useRouter()
@@ -19,6 +20,26 @@ const modalWinner = ref('')
 const isAborted = ref(false)
 const tempGameRecord = ref<GameRecord | undefined>(undefined)
 const specialMessage = ref('')
+
+const checkoutSuggestion = computed<CheckoutGuide | null>(() => {
+  if (gameStore.gameType !== '01' || gameStore.isGameOver) return null
+  // Calculate darts remaining in this turn
+  // But checkout guide is usually based on "How to finish from current score"
+  // regardless of how many darts I have *right now*?
+  // No, if I have 1 dart left and need 50, I can finish.
+  // If I have 1 dart left and need 60 (T20), I cannot finish (must be double).
+  // So dartsRemaining is crucial.
+  const dartsRemaining = 3 - gameStore.currentThrow
+  return getCheckoutGuide(gameStore.score01, dartsRemaining)
+})
+
+const formatCheckoutStep = (step: CheckoutTarget) => {
+  if (step.score === 25) {
+    return step.multiplier === 2 ? 'D-Bull' : 'Bull'
+  }
+  const prefix = step.multiplier === 3 ? 'T' : step.multiplier === 2 ? 'D' : ''
+  return `${prefix}${step.score}`
+}
 
 watch(
   () => gameStore.isBust,
@@ -208,17 +229,39 @@ watch(
 
 <template>
   <div class="game-view">
-    <header>
+    <header class="game-header">
       <button @click="confirmExit" class="back-btn">End Game</button>
       <div class="round-info">R{{ gameStore.currentRound }}</div>
       <button @click="onUndo" :disabled="gameStore.throwHistory.length === 0">Undo</button>
     </header>
 
     <div class="content">
-      <ScoreBoard01 v-if="gameStore.gameType === '01'" />
-      <ScoreBoardCricket v-else />
+      <div class="scoreboard-area">
+        <ScoreBoard01 v-if="gameStore.gameType === '01'" />
+        <ScoreBoardCricket v-else />
+      </div>
 
-      <Dartboard @hit="onHit" :hits="gameStore.currentTurnThrows" />
+      <div class="checkout-guide-container">
+        <div
+          v-if="checkoutSuggestion"
+          class="checkout-guide"
+          :class="{ 'is-setup': checkoutSuggestion.isSetup }"
+        >
+          {{ checkoutSuggestion.isSetup ? 'Setup:' : 'Checkout:' }}
+          <span v-for="(step, i) in checkoutSuggestion.steps" :key="i" class="checkout-step">
+            {{ formatCheckoutStep(step)
+            }}<span v-if="i < checkoutSuggestion.steps.length - 1"> → </span>
+          </span>
+        </div>
+      </div>
+
+      <div class="board-wrapper">
+        <Dartboard
+          @hit="onHit"
+          :hits="gameStore.currentTurnThrows"
+          :highlight-targets="checkoutSuggestion?.steps"
+        />
+      </div>
 
       <div v-if="specialMessage" class="special-message">
         {{ specialMessage }}
@@ -251,22 +294,37 @@ watch(
   display: flex;
   flex-direction: column;
   height: 100dvh;
-  padding: 10px;
+  /* padding: 10px; Removed padding to match other views */
   box-sizing: border-box;
 }
 
-header {
+.game-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 5px;
+  padding: 10px;
+  background: transparent;
+  z-index: 10;
   flex-shrink: 0;
+  position: relative;
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 0; /* Remove padding to maximize space */
 }
 
 .round-info {
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   font-weight: 900;
   color: #333;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
 }
 
 button {
@@ -282,10 +340,20 @@ button {
   flex-direction: column;
   justify-content: flex-start;
   align-items: center;
-  gap: 20px;
-  overflow-y: auto;
+  gap: 0; /* Remove gap */
+  overflow: hidden;
   width: 100%;
-  padding-top: 20px;
+  padding-top: 0; /* Remove top padding */
+}
+
+.board-wrapper {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0; /* Remove padding to maximize size */
 }
 
 .current-throws {
@@ -316,7 +384,7 @@ button {
   width: 100%;
   display: flex;
   justify-content: center;
-  margin-top: 5px;
+  margin-top: 0; /* Remove margin */
   flex-shrink: 0;
   padding-bottom: 10px;
 }
@@ -366,6 +434,38 @@ button {
   pointer-events: none;
   z-index: 20;
   animation: pop-message 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.scoreboard-area {
+  margin-bottom: 10px;
+}
+
+.checkout-guide-container {
+  height: 32px; /* Fixed height to prevent layout shift */
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.checkout-guide {
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #2196f3;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 2px 10px;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  white-space: nowrap;
+}
+
+.checkout-guide.is-setup {
+  color: #ff9800; /* Orange for setup */
+}
+
+.checkout-step {
+  color: #e91e63;
 }
 
 @keyframes pop-message {

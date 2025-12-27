@@ -4,6 +4,7 @@ import { getScoreFromCoordinates, type DartScore } from '../utils/darts'
 
 const props = defineProps<{
   hits?: DartScore[]
+  highlightTargets?: { score: number; multiplier: number }[]
 }>()
 
 const emit = defineEmits<{
@@ -39,6 +40,78 @@ const R_TRIPLE_INNER = 55.0
 const R_TRIPLE_OUTER = 65.0
 const R_DOUBLE_INNER = 90.0
 const R_DOUBLE_OUTER = 100.0
+
+// Helper to create sector path
+const createSectorPath = (
+  startAngleDeg: number,
+  endAngleDeg: number,
+  rInner: number,
+  rOuter: number,
+) => {
+  const start = (startAngleDeg * Math.PI) / 180
+  const end = (endAngleDeg * Math.PI) / 180
+
+  const x1 = Math.cos(start) * rInner
+  const y1 = Math.sin(start) * rInner
+  const x2 = Math.cos(start) * rOuter
+  const y2 = Math.sin(start) * rOuter
+  const x3 = Math.cos(end) * rOuter
+  const y3 = Math.sin(end) * rOuter
+  const x4 = Math.cos(end) * rInner
+  const y4 = Math.sin(end) * rInner
+
+  return `M${x1} ${y1} L${x2} ${y2} A${rOuter} ${rOuter} 0 0 1 ${x3} ${y3} L${x4} ${y4} A${rInner} ${rInner} 0 0 0 ${x1} ${y1} Z`
+}
+
+const highlightPaths = computed(() => {
+  if (!props.highlightTargets || props.highlightTargets.length === 0) return []
+
+  return props.highlightTargets
+    .map((target) => {
+      if (target.score === 25) {
+        if (target.multiplier === 2) {
+          // Inner Bull
+          return {
+            d: `M0 0 m-${R_BULL_INNER},0 a${R_BULL_INNER},${R_BULL_INNER} 0 1,0 ${R_BULL_INNER * 2},0 a${R_BULL_INNER},${R_BULL_INNER} 0 1,0 -${R_BULL_INNER * 2},0`,
+            key: 'bull-inner',
+          }
+        } else {
+          // Outer Bull
+          // Annulus path
+          return {
+            d: `M${R_BULL_INNER} 0 A${R_BULL_INNER} ${R_BULL_INNER} 0 1 0 -${R_BULL_INNER} 0 A${R_BULL_INNER} ${R_BULL_INNER} 0 1 0 ${R_BULL_INNER} 0
+              M${R_BULL_OUTER} 0 A${R_BULL_OUTER} ${R_BULL_OUTER} 0 1 1 -${R_BULL_OUTER} 0 A${R_BULL_OUTER} ${R_BULL_OUTER} 0 1 1 ${R_BULL_OUTER} 0 Z`,
+            key: 'bull-outer',
+            fillRule: 'evenodd',
+          }
+        }
+      }
+
+      const i = SLICES.indexOf(target.score)
+      if (i === -1) return null
+
+      const startAngle = i * 18 - 9 - 90
+      const endAngle = i * 18 + 9 - 90
+
+      let d = ''
+      if (target.multiplier === 3) {
+        d = createSectorPath(startAngle, endAngle, R_TRIPLE_INNER, R_TRIPLE_OUTER)
+      } else if (target.multiplier === 2) {
+        d = createSectorPath(startAngle, endAngle, R_DOUBLE_INNER, R_DOUBLE_OUTER)
+      } else {
+        // Single: Highlight Outer Single (bigger area)
+        d = createSectorPath(startAngle, endAngle, R_TRIPLE_OUTER, R_DOUBLE_INNER)
+        // Optional: Also highlight Inner Single?
+        // d += ' ' + createSectorPath(startAngle, endAngle, R_BULL_OUTER, R_TRIPLE_INNER)
+      }
+
+      return { d, key: `slice-${target.score}-${target.multiplier}` }
+    })
+    .filter(
+      (p): p is { d: string; key: string; fillRule?: 'nonzero' | 'evenodd' | 'inherit' } =>
+        p !== null,
+    )
+})
 
 // Generate paths for numbers
 const textRadius = 112
@@ -137,7 +210,7 @@ const hitMarkers = computed(() => {
       <g v-for="(num, i) in SLICES" :key="`slice-${i}`">
         <path
           :d="`M0 0 L${Math.cos(((i * 18 - 9 - 90) * Math.PI) / 180) * 100} ${Math.sin(((i * 18 - 9 - 90) * Math.PI) / 180) * 100} A100 100 0 0 1 ${Math.cos(((i * 18 + 9 - 90) * Math.PI) / 180) * 100} ${Math.sin(((i * 18 + 9 - 90) * Math.PI) / 180) * 100} Z`"
-          :fill="i % 2 === 0 ? 'black' : '#f0d9b5'"
+          :fill="i % 2 === 0 ? '#333' : '#fff'"
           stroke="#aaa"
           stroke-width="0.5"
         />
@@ -175,6 +248,19 @@ const hitMarkers = computed(() => {
       <circle cx="0" cy="0" :r="R_BULL_OUTER" fill="#2196f3" stroke="#aaa" stroke-width="0.5" />
       <!-- Inner Bull -->
       <circle cx="0" cy="0" :r="R_BULL_INNER" fill="#e91e63" stroke="#aaa" stroke-width="0.5" />
+
+      <!-- Highlights -->
+      <g v-for="path in highlightPaths" :key="path.key">
+        <path
+          :d="path.d"
+          fill="#ffff00"
+          fill-opacity="0.6"
+          stroke="#ffff00"
+          stroke-width="2"
+          :fill-rule="path.fillRule || 'nonzero'"
+          class="highlight-pulse"
+        />
+      </g>
 
       <!-- Numbers -->
       <text
@@ -220,15 +306,15 @@ const hitMarkers = computed(() => {
 
 <style scoped>
 .dartboard-container {
-  width: 100%;
-  max-width: 500px;
-  /* Remove aspect-ratio to allow flex to control size, but keep it square via max-height/width logic if needed */
-  /* Actually, keeping aspect-ratio is good for the board itself, but we want it to fit in available space */
+  height: auto;
+  width: auto;
+  max-width: 100%;
+  max-height: 100%;
   aspect-ratio: 1;
   margin: 0 auto;
-  flex-shrink: 1; /* Allow shrinking */
-  min-height: 0; /* Allow flex item to shrink below content size */
-  max-height: 60vh; /* Limit height on mobile */
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .dartboard {
@@ -248,6 +334,22 @@ const hitMarkers = computed(() => {
   }
   100% {
     transform: scale(1);
+  }
+}
+
+.highlight-pulse {
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    fill-opacity: 0.4;
+  }
+  50% {
+    fill-opacity: 0.7;
+  }
+  100% {
+    fill-opacity: 0.4;
   }
 }
 </style>

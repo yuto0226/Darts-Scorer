@@ -72,6 +72,7 @@ const emit = defineEmits<{
   max-height: 90vh;
   display: flex;
   flex-direction: column;
+  margin: 20px; /* Add margin to ensure it doesn't touch screen edges */
 }
 
 .chart-preview {
