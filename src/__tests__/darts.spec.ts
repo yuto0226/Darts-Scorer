@@ -170,7 +170,8 @@ describe('getScoreFromCoordinates', () => {
       [5, 0], // Inner bull
     ]
 
-    testCoords.forEach(([x, y]) => {
+    testCoords.forEach((coord) => {
+      const [x, y] = coord as [number, number]
       const result = getScoreFromCoordinates(x, y)
       expect(possibleScores).toContain(result.score)
     })

@@ -75,7 +75,8 @@ describe('encodeGameRecord and decodeGameRecord', () => {
     expect(decoded.targetScore).toBe(301)
     expect(decoded.finalScore).toBe(0)
     expect(decoded.rounds).toHaveLength(1)
-    expect(decoded.rounds[0].throws).toHaveLength(3)
+    expect(decoded.rounds[0]).toBeDefined()
+    expect(decoded.rounds[0]!.throws).toHaveLength(3)
   })
 
   it('encodes and decodes cricket game correctly', () => {
@@ -83,8 +84,11 @@ describe('encodeGameRecord and decodeGameRecord', () => {
     const decoded = decodeGameRecord(encoded)
     expect(decoded.type).toBe('cricket')
     expect(decoded.finalScore).toBe(0)
-    expect(decoded.rounds[0].throws[0].score).toBe(20)
-    expect(decoded.rounds[0].throws[0].multiplier).toBe(3)
+    expect(decoded.rounds[0]).toBeDefined()
+    const firstRound = decoded.rounds[0]!
+    expect(firstRound.throws[0]).toBeDefined()
+    expect(firstRound.throws[0]!.score).toBe(20)
+    expect(firstRound.throws[0]!.multiplier).toBe(3)
   })
 
   it('encodes and decodes count_up game correctly', () => {
@@ -120,7 +124,8 @@ describe('encodeGameRecord and decodeGameRecord', () => {
     expect(decoded.winner).toBe(original.winner)
     expect(decoded.finalScore).toBe(original.finalScore)
     expect(decoded.rounds.length).toBe(original.rounds.length)
-    expect(decoded.rounds[0].throws.length).toBe(original.rounds[0].throws.length)
+    expect(decoded.rounds[0]).toBeDefined()
+    expect(decoded.rounds[0]!.throws.length).toBe(original.rounds[0]!.throws.length)
   })
 
   // Edge cases
@@ -157,8 +162,10 @@ describe('encodeGameRecord and decodeGameRecord', () => {
     const encoded = encodeGameRecord(gameWithMultipleRounds)
     const decoded = decodeGameRecord(encoded)
     expect(decoded.rounds).toHaveLength(2)
-    expect(decoded.rounds[0].throws).toHaveLength(1)
-    expect(decoded.rounds[1].throws).toHaveLength(2)
+    expect(decoded.rounds[0]).toBeDefined()
+    expect(decoded.rounds[0]!.throws).toHaveLength(1)
+    expect(decoded.rounds[1]).toBeDefined()
+    expect(decoded.rounds[1]!.throws).toHaveLength(2)
   })
 
   it('handles missing targetScore', () => {
@@ -215,10 +222,13 @@ describe('encodeGameRecord and decodeGameRecord', () => {
     }
     const encoded = encodeGameRecord(gameAllThrows)
     const decoded = decodeGameRecord(encoded)
-    expect(decoded.rounds[0].throws).toHaveLength(6)
-    expect(decoded.rounds[0].throws[0].score).toBe(0)
-    expect(decoded.rounds[0].throws[5].score).toBe(25)
-    expect(decoded.rounds[0].throws[5].multiplier).toBe(2)
+    expect(decoded.rounds[0]).toBeDefined()
+    expect(decoded.rounds[0]!.throws).toHaveLength(6)
+    expect(decoded.rounds[0]!.throws[0]).toBeDefined()
+    expect(decoded.rounds[0]!.throws[0]!.score).toBe(0)
+    expect(decoded.rounds[0]!.throws[5]).toBeDefined()
+    expect(decoded.rounds[0]!.throws[5]!.score).toBe(25)
+    expect(decoded.rounds[0]!.throws[5]!.multiplier).toBe(2)
   })
 
   it('calculates stats correctly for 01', () => {

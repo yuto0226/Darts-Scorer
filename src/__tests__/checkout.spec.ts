@@ -69,9 +69,11 @@ describe('getCheckoutGuide', () => {
   it('prefers higher scoring throws in combinations', () => {
     const result = getCheckoutGuide(140, 3) // Could be T20+T20+D20 or other combos
     expect(result).not.toBeNull()
-    expect(result!.steps[0].score * result!.steps[0].multiplier).toBeGreaterThanOrEqual(
-      result!.steps[1]?.score * result!.steps[1]?.multiplier || 0,
-    )
+    if (result && result.steps.length >= 2) {
+      expect(result.steps[0]!.score * result.steps[0]!.multiplier).toBeGreaterThanOrEqual(
+        result.steps[1]!.score * result.steps[1]!.multiplier,
+      )
+    }
   })
 
   it('handles bull finishes', () => {
