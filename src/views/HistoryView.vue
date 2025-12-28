@@ -76,11 +76,15 @@ const deleteGame = (e: Event, id: string) => {
       <div class="stats-overview">
         <div class="stat-card">
           <div class="stat-label">Avg PPD (Last 10)</div>
-          <div class="stat-value">{{ recentStats.avgPPD }}</div>
+          <div class="stat-value" style="color: rgba(66, 184, 131, 1)">
+            {{ recentStats.avgPPD }}
+          </div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Avg MPR (Last 10)</div>
-          <div class="stat-value">{{ recentStats.avgMPR }}</div>
+          <div class="stat-value" style="color: rgba(52, 152, 219, 1)">
+            {{ recentStats.avgMPR }}
+          </div>
         </div>
       </div>
 

@@ -36,16 +36,16 @@ const chartData = computed(() => {
     datasets: [
       {
         label: 'PPD (01)',
-        backgroundColor: '#42b883',
-        borderColor: '#42b883',
+        backgroundColor: 'rgba(66, 184, 131, 0.2)',
+        borderColor: 'rgba(66, 184, 131, 1)',
         data: ppdData,
         spanGaps: true,
         tension: 0.3,
       },
       {
         label: 'MPR (Cricket)',
-        backgroundColor: '#42b883',
-        borderColor: '#42b883',
+        backgroundColor: 'rgba(52, 152, 219, 0.2)',
+        borderColor: 'rgba(52, 152, 219, 1)',
         data: mprData,
         spanGaps: true,
         tension: 0.3,
@@ -54,6 +54,65 @@ const chartData = computed(() => {
     ],
   }
 })
+
+const averageData = computed(() => {
+  const ppdData = chartData.value?.datasets[0]?.data || []
+  const mprData = chartData.value?.datasets[1]?.data || []
+
+  const ppdAverage = ppdData.map((_, index) => {
+    const slice = ppdData.slice(0, index + 1).filter((val) => val !== null)
+    return slice.length ? slice.reduce((sum, val) => sum + val, 0) / slice.length : null
+  })
+
+  const mprAverage = mprData.map((_, index) => {
+    const slice = mprData.slice(0, index + 1).filter((val) => val !== null)
+    return slice.length ? slice.reduce((sum, val) => sum + val, 0) / slice.length : null
+  })
+
+  return {
+    ppd: ppdAverage,
+    mpr: mprAverage,
+  }
+})
+
+chartData.value.datasets = [
+  {
+    label: 'PPD (01)',
+    backgroundColor: 'rgba(66, 184, 131, 0.2)',
+    borderColor: 'rgba(66, 184, 131, 1)',
+    data: chartData.value.datasets[0].data,
+    spanGaps: true,
+    tension: 0.3,
+  },
+  {
+    label: 'MPR (Cricket)',
+    backgroundColor: 'rgba(52, 152, 219, 0.2)',
+    borderColor: 'rgba(52, 152, 219, 1)',
+    data: chartData.value.datasets[1].data,
+    spanGaps: true,
+    tension: 0.3,
+    yAxisID: 'y1',
+  },
+  {
+    label: 'Avg PPD',
+    backgroundColor: 'rgba(66, 184, 131, 0.1)',
+    borderColor: 'rgba(66, 184, 131, 0.8)',
+    borderDash: [5, 5] as [number, number],
+    data: averageData.value.ppd,
+    spanGaps: true,
+    tension: 0.4,
+  },
+  {
+    label: 'Avg MPR',
+    backgroundColor: 'rgba(52, 152, 219, 0.1)',
+    borderColor: 'rgba(52, 152, 219, 0.8)',
+    borderDash: [5, 5] as [number, number],
+    data: averageData.value.mpr,
+    spanGaps: true,
+    tension: 0.4,
+    yAxisID: 'y1',
+  },
+]
 
 const chartOptions = {
   responsive: true,
