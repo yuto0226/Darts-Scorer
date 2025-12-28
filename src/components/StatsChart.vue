@@ -10,6 +10,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js'
+import type { ChartDataset } from 'chart.js'
 import { Line } from 'vue-chartjs'
 import type { GameRecord } from '../stores/history'
 
@@ -51,13 +52,13 @@ const chartData = computed(() => {
         tension: 0.3,
         yAxisID: 'y1',
       },
-    ],
+    ] as ChartDataset<'line'>[],
   }
 })
 
 const averageData = computed(() => {
-  const ppdData = chartData.value?.datasets[0]?.data || []
-  const mprData = chartData.value?.datasets[1]?.data || []
+  const ppdData = (chartData.value?.datasets[0]?.data as (number | null)[]) || []
+  const mprData = (chartData.value?.datasets[1]?.data as (number | null)[]) || []
 
   const ppdAverage = ppdData.map((_, index) => {
     const slice = ppdData.slice(0, index + 1).filter((val) => val !== null)
@@ -80,7 +81,7 @@ chartData.value.datasets = [
     label: 'PPD (01)',
     backgroundColor: 'rgba(66, 184, 131, 0.2)',
     borderColor: 'rgba(66, 184, 131, 1)',
-    data: chartData.value.datasets[0].data,
+    data: chartData.value.datasets?.[0]?.data ?? [],
     spanGaps: true,
     tension: 0.3,
   },
@@ -88,7 +89,7 @@ chartData.value.datasets = [
     label: 'MPR (Cricket)',
     backgroundColor: 'rgba(52, 152, 219, 0.2)',
     borderColor: 'rgba(52, 152, 219, 1)',
-    data: chartData.value.datasets[1].data,
+    data: chartData.value.datasets?.[1]?.data ?? [],
     spanGaps: true,
     tension: 0.3,
     yAxisID: 'y1',
@@ -97,7 +98,7 @@ chartData.value.datasets = [
     label: 'Avg PPD',
     backgroundColor: 'rgba(66, 184, 131, 0.1)',
     borderColor: 'rgba(66, 184, 131, 0.8)',
-    borderDash: [5, 5] as [number, number],
+    borderDash: [5, 5],
     data: averageData.value.ppd,
     spanGaps: true,
     tension: 0.4,
@@ -106,7 +107,7 @@ chartData.value.datasets = [
     label: 'Avg MPR',
     backgroundColor: 'rgba(52, 152, 219, 0.1)',
     borderColor: 'rgba(52, 152, 219, 0.8)',
-    borderDash: [5, 5] as [number, number],
+    borderDash: [5, 5],
     data: averageData.value.mpr,
     spanGaps: true,
     tension: 0.4,

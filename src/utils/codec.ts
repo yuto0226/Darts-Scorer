@@ -5,11 +5,6 @@ import type { DartScore } from './darts'
 // Minified Types
 type MinifiedGameType = 0 | 1 | 2 // 0: '01', 1: 'cricket', 2: 'count_up'
 
-interface MinifiedThrow {
-  s: number // score
-  m: 1 | 2 | 3 // multiplier
-}
-
 interface MinifiedRound {
   t: [number, 1 | 2 | 3][] // throws: [score, multiplier]
 }
@@ -19,7 +14,7 @@ interface MinifiedGameRecord {
   ts?: number // targetScore
   d: number // date
   w: string // winner
-  fs: any // finalScore
+  fs: number // finalScore
   r: MinifiedRound[] // rounds
 }
 
@@ -117,7 +112,7 @@ export function decodeGameRecord(compressed: string): GameRecord {
   let targetScore: number | undefined
   let date: number
   let winner: string
-  let finalScore: any
+  let finalScore: number
   let roundsData: { score: number; multiplier: 1 | 2 | 3 }[][] = []
 
   if (raw.startsWith(V3_PREFIX)) {
@@ -167,7 +162,6 @@ export function decodeGameRecord(compressed: string): GameRecord {
     20: 0,
     25: 0,
   }
-  let cricketScore = 0
   let totalDarts = 0
   let totalMarks = 0 // For MPR
 

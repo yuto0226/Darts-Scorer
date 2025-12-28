@@ -2,6 +2,10 @@
 import { ref, computed } from 'vue'
 import { getScoreFromCoordinates, type DartScore } from '../utils/darts'
 
+defineOptions({
+  name: 'DartBoard',
+})
+
 const props = defineProps<{
   hits?: DartScore[]
   highlightTargets?: { score: number; multiplier: number }[]

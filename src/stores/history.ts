@@ -14,7 +14,7 @@ export interface GameRecord {
   targetScore?: number // For 01 games (e.g. 301, 501)
   date: number
   winner: string
-  finalScore: any
+  finalScore: number
   rounds: RoundRecord[]
   stats?: {
     ppd?: number
