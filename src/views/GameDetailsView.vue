@@ -2,12 +2,14 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useHistoryStore } from '../stores/history'
+import { useProfileStore } from '../stores/profile'
 import HistoryChart from '../components/HistoryChart.vue'
 import { encodeGameRecord } from '../utils/codec'
 
 const route = useRoute()
 const router = useRouter()
 const historyStore = useHistoryStore()
+const profileStore = useProfileStore()
 
 const gameId = route.params.id as string
 const game = computed(() => historyStore.games.find((g) => g.id === gameId))
@@ -113,13 +115,16 @@ const deleteGame = () => {
 
 const shareGame = () => {
   if (!game.value) return
-  const compressed = encodeGameRecord(game.value)
+  const compressed = encodeGameRecord(game.value, profileStore.profile.username)
   const url = `${window.location.origin}/share?data=${compressed}`
 
   if (navigator.share) {
+    const title = profileStore.profile.username
+      ? `${profileStore.profile.username}'s Game Result`
+      : 'Darts Game Result'
     navigator
       .share({
-        title: 'Darts Game Result',
+        title,
         text: `Check out my darts game!`,
         url: url,
       })
@@ -166,7 +171,7 @@ const shareGame = () => {
             <span class="label">{{ game.type === '01' ? 'Rounds' : 'Final Score' }}</span>
             <span class="value">{{
               game.type === '01' ? game.rounds?.length || '-' : game.finalScore
-            }}</span>
+              }}</span>
           </div>
         </div>
         <div class="summary-actions">
@@ -190,7 +195,7 @@ const shareGame = () => {
           <div v-for="round in roundsWithRunningScore" :key="round.round" class="table-row">
             <span class="round-num">{{ round.round }}</span>
             <span class="throws">
-              {{ round.throws.map((t) => t.label).join(', ') }}
+              {{round.throws.map((t) => t.label).join(', ')}}
             </span>
             <span class="round-score">
               <!-- Display score after round or marks -->
@@ -227,7 +232,8 @@ const shareGame = () => {
   z-index: 10;
   flex-shrink: 0;
   position: relative;
-  height: 60px; /* Fixed height for consistency */
+  height: 60px;
+  /* Fixed height for consistency */
   box-sizing: border-box;
 }
 
@@ -253,7 +259,8 @@ button {
   background: white;
   cursor: pointer;
   font-size: 1rem;
-  height: 36px; /* Fixed height for consistency */
+  height: 36px;
+  /* Fixed height for consistency */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -265,7 +272,8 @@ button {
 }
 
 .header-spacer {
-  width: 40px; /* Match back button width roughly */
+  width: 40px;
+  /* Match back button width roughly */
 }
 
 .summary-actions {

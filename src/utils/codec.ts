@@ -16,6 +16,7 @@ interface MinifiedGameRecord {
   w: string // winner
   fs: number // finalScore
   r: MinifiedRound[] // rounds
+  u?: string // username (optional for backward compatibility)
 }
 
 // Helpers
@@ -84,7 +85,7 @@ const decodeWinner = (code: string): string => {
 }
 
 // Main Functions
-export function encodeGameRecord(record: GameRecord): string {
+export function encodeGameRecord(record: GameRecord, username?: string): string {
   // V3 Encoding
   const typeIdx = getTypeIndex(record.type)
   const target = record.targetScore ? record.targetScore.toString(36) : ''
@@ -100,11 +101,13 @@ export function encodeGameRecord(record: GameRecord): string {
     })
   })
 
-  const raw = `${V3_PREFIX}${typeIdx}|${target}|${date}|${winner}|${final}|${body}`
+  // Include username only if provided
+  const userPart = username ? `|${username}` : ''
+  const raw = `${V3_PREFIX}${typeIdx}|${target}|${date}|${winner}|${final}${userPart}|${body}`
   return LZString.compressToEncodedURIComponent(raw)
 }
 
-export function decodeGameRecord(compressed: string): GameRecord {
+export function decodeGameRecord(compressed: string): GameRecord & { username?: string } {
   const raw = LZString.decompressFromEncodedURIComponent(compressed)
   if (!raw) throw new Error('Decompression failed')
 
@@ -115,11 +118,13 @@ export function decodeGameRecord(compressed: string): GameRecord {
   let finalScore: number
   let roundsData: { score: number; multiplier: 1 | 2 | 3 }[][] = []
 
+  let username: string | undefined
+
   if (raw.startsWith(V3_PREFIX)) {
     // V3 Decoding
     const parts = raw.split('|')
-    // v3 | type | target | date | winner | final | body
-    // 0    1      2        3      4        5       6
+    // v3 | type | target | date | winner | final | [username] | body
+    // 0    1      2        3      4        5       6(opt)     7+
     const typeIdx = parseInt(parts[1] || '0') as MinifiedGameType
     type = getTypeString(typeIdx)
     targetScore = parts[2] ? parseInt(parts[2], 36) : undefined
@@ -127,7 +132,14 @@ export function decodeGameRecord(compressed: string): GameRecord {
     winner = decodeWinner(parts[4] || '0')
     finalScore = parseInt(parts[5] || '0', 36)
 
-    const body = parts.slice(6).join('|') // In case body contains | (it shouldn't)
+    // Check if username is present (parts.length >= 8 means username exists)
+    let bodyStartIndex = 6
+    if (parts.length >= 8) {
+      username = parts[6] || undefined
+      bodyStartIndex = 7
+    }
+
+    const body = parts.slice(bodyStartIndex).join('|')
     const roundStrings = body.split(ROUND_SEPARATOR_CHAR)
     roundsData = roundStrings.map((rs) => {
       const throws: { score: number; multiplier: 1 | 2 | 3 }[] = []
@@ -250,5 +262,6 @@ export function decodeGameRecord(compressed: string): GameRecord {
     finalScore,
     rounds,
     stats,
+    username,
   }
 }
