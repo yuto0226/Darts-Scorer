@@ -48,12 +48,15 @@ export function getCheckoutGuide(score: number, dartsRemaining: number): Checkou
   // 1 Dart Finish
   if (dartsRemaining >= 1) {
     // Check ALL throws
-    const oneDartOptions = ALL_THROWS.filter((d) => d.score * d.multiplier === score)
+    const oneDartOptions = ALL_THROWS.filter((d) => d.score * d.multiplier === score).sort(
+      (a, b) => {
+        if (a.multiplier !== b.multiplier) {
+          return a.multiplier - b.multiplier
+        }
+        return b.score - a.score
+      },
+    )
     if (oneDartOptions.length > 0) {
-      // Sort options: Double > Single > Triple (Standard preference usually Double, but user wants all)
-      // Let's just return them all in finalOptions
-      // And steps can be empty or just the first one?
-      // If we have finalOptions, the UI should display them instead of steps[0]
       return {
         steps: [oneDartOptions[0]!],
         finalOptions: oneDartOptions,
