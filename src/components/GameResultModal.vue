@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import type { GameRecord } from '../stores/history'
+import { useProfileStore } from '../stores/profile'
 import HistoryChart from './HistoryChart.vue'
 import { encodeGameRecord } from '../utils/codec'
 
@@ -14,6 +15,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'close', result: 'Win' | 'Loss' | 'Abort' | 'Discard' | 'Cancel'): void
 }>()
+
+const profileStore = useProfileStore()
 
 // Local state to handle the transition from "Abort Confirmation" to "Result View"
 const showResult = ref(false)
@@ -44,7 +47,7 @@ const handleClose = (result: 'Win' | 'Loss' | 'Abort' | 'Discard' | 'Cancel') =>
 }
 
 const shareGame = (record: GameRecord) => {
-  const compressed = encodeGameRecord(record)
+  const compressed = encodeGameRecord(record, profileStore.profile.username)
   const url = `${window.location.origin}/share?data=${compressed}`
 
   if (navigator.share) {
@@ -133,7 +136,8 @@ const shareGame = (record: GameRecord) => {
   max-height: 90vh;
   display: flex;
   flex-direction: column;
-  margin: 20px; /* Add margin to ensure it doesn't touch screen edges */
+  margin: 20px;
+  /* Add margin to ensure it doesn't touch screen edges */
   overflow: hidden;
 }
 
@@ -141,7 +145,8 @@ const shareGame = (record: GameRecord) => {
   flex: 1;
   overflow-y: auto;
   min-height: 0;
-  padding: 0; /* Removed padding to align chart with buttons */
+  padding: 0;
+  /* Removed padding to align chart with buttons */
 }
 
 .chart-preview {
@@ -179,24 +184,29 @@ button {
   background: #4caf50;
   color: white;
 }
+
 .loss-btn {
   background: #f44336;
   color: white;
 }
+
 .abort-btn {
   background: #9e9e9e;
   color: white;
 }
+
 .cancel-btn {
   background: transparent;
   border: 1px solid #ccc;
   color: #666;
 }
+
 .ok-btn {
   background: #42b883;
   color: white;
   width: 100%;
 }
+
 .share-btn {
   background: #ff9800;
   color: white;

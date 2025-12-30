@@ -8,7 +8,7 @@ import { decodeGameRecord } from '../utils/codec'
 const route = useRoute()
 const router = useRouter()
 
-const game = ref<GameRecord | null>(null)
+const game = ref<(GameRecord & { username?: string }) | null>(null)
 const error = ref('')
 
 onMounted(() => {
@@ -33,6 +33,12 @@ const gameTypeLabel = computed(() => {
   return game.value.type.toUpperCase()
 })
 
+const shareTitle = computed(() => {
+  return game.value?.username
+    ? `${game.value.username}'s Game Result`
+    : 'Game Result'
+})
+
 const isWin = computed(() => {
   if (!game.value) return false
   return game.value.winner === 'Win' || game.value.winner === 'Player 1'
@@ -40,9 +46,12 @@ const isWin = computed(() => {
 
 const shareGame = () => {
   if (navigator.share) {
+    const title = game.value?.username
+      ? `${game.value.username}'s Game Result`
+      : 'Darts Game Result'
     navigator
       .share({
-        title: 'Darts Game Result',
+        title,
         text: `Check out this darts game!`,
         url: window.location.href,
       })
@@ -62,7 +71,7 @@ const goHome = () => {
 <template>
   <div class="game-details" v-if="game">
     <div class="content-scroll">
-      <h1 class="share-title">Game Result</h1>
+      <h1 class="share-title">{{ shareTitle }}</h1>
 
       <div class="summary">
         <div class="summary-row top-row">
@@ -83,7 +92,7 @@ const goHome = () => {
             <span class="label">{{ game.type === '01' ? 'Rounds' : 'Final Score' }}</span>
             <span class="value">{{
               game.type === '01' ? game.rounds?.length || '-' : game.finalScore
-            }}</span>
+              }}</span>
           </div>
         </div>
         <div class="summary-actions">
@@ -111,7 +120,7 @@ const goHome = () => {
           <div v-for="round in game.rounds" :key="round.round" class="table-row">
             <span class="round-num">{{ round.round }}</span>
             <span class="throws">
-              {{ round.throws.map((t) => t.label).join(', ') }}
+              {{round.throws.map((t) => t.label).join(', ')}}
             </span>
             <span class="round-score">
               <!-- Display score after round or marks -->
@@ -182,7 +191,8 @@ const goHome = () => {
     box-shadow 0.2s;
   width: auto;
   height: auto;
-  display: inline-flex; /* Ensure it respects text-align: center */
+  display: inline-flex;
+  /* Ensure it respects text-align: center */
 }
 
 .cta-btn:active {
@@ -196,7 +206,8 @@ button {
   background: white;
   cursor: pointer;
   font-size: 1rem;
-  height: 36px; /* Fixed height for consistency */
+  height: 36px;
+  /* Fixed height for consistency */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -292,7 +303,8 @@ button {
 
 .chart-section {
   margin-bottom: 20px;
-  height: auto; /* Allow height to adjust to content */
+  height: auto;
+  /* Allow height to adjust to content */
 }
 
 .rounds-section {
