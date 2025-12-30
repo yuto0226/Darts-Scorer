@@ -4,6 +4,7 @@ import GameView from '../views/GameView.vue'
 import HistoryView from '../views/HistoryView.vue'
 import GameDetailsView from '../views/GameDetailsView.vue'
 import ShareView from '../views/ShareView.vue'
+import ProfileView from '../views/ProfileView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -32,6 +33,11 @@ const router = createRouter({
       path: '/share',
       name: 'share',
       component: ShareView,
+    },
+    {
+      path: '/profile',
+      name: 'profile',
+      component: ProfileView,
     },
   ],
 })
