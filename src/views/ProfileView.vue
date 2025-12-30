@@ -43,9 +43,9 @@ const importData = (event: Event) => {
             if (data.history) {
                 historyStore.games = data.history
             }
-            alert('資料匯入成功！')
+            alert('Data imported successfully!')
         } catch {
-            alert('匯入失敗：無效的檔案格式')
+            alert('Import failed: Invalid file format')
         }
     }
     reader.readAsText(file)
@@ -62,22 +62,22 @@ const importData = (event: Event) => {
 
         <div class="content-wrapper">
             <div class="settings-card">
-                <h2>個人設定</h2>
+                <h2>Personal Settings</h2>
                 <div class="username-section">
-                    <label for="username">暱稱</label>
-                    <input id="username" v-model="username" placeholder="輸入您的暱稱" />
-                    <button @click="updateUsername" class="save-btn">儲存</button>
+                    <label for="username">Username</label>
+                    <input id="username" v-model="username" placeholder="Enter your username" />
+                    <button @click="updateUsername" class="save-btn">Save</button>
                 </div>
             </div>
 
             <div class="data-card">
-                <h2>資料匯入匯出</h2>
+                <h2>Data Import/Export</h2>
                 <div class="buttons">
-                    <button @click="exportData">匯出資料</button>
+                    <button @click="exportData">Export Data</button>
                     <input type="file" accept=".json" @change="importData" style="display: none" ref="fileInput" />
-                    <button @click="fileInput?.click()">匯入資料</button>
+                    <button @click="fileInput?.click()">Import Data</button>
                 </div>
-                <p class="note">匯出資料包含您的個人設定和遊戲歷史記錄。</p>
+                <p class="note">Export data includes your personal settings and game history.</p>
             </div>
         </div>
     </div>
@@ -96,7 +96,7 @@ const importData = (event: Event) => {
 .content-wrapper {
     flex: 1;
     overflow-y: auto;
-    padding: 0;
+    padding: 20px;
 }
 
 .sticky-header {
@@ -143,7 +143,7 @@ button {
 .settings-card,
 .data-card {
     background: white;
-    margin: 20px;
+    margin: 0 0 16px 0;
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -171,7 +171,8 @@ button {
 
 .username-section input {
     flex: 1;
-    padding: 16px 20px;
+    min-width: 0;
+    padding: 16px 10px;
     border: 1px solid #ccc;
     border-radius: 4px;
     box-sizing: border-box;
